@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "547435366562",
+    "project_id": "my-project-3202f",
+    "storage_bucket": "my-project-3202f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:547435366562:android:2a81b97c667cd711e22ffb",
+        "android_client_info": {
+          "package_name": "br.com.project.quackbase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2I2X7b4uODkye7AKtXtO-e6g12ffWtb4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:547435366562:android:ae7331c8836093afe22ffb",
+        "android_client_info": {
+          "package_name": "br.com.uri.campushub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2I2X7b4uODkye7AKtXtO-e6g12ffWtb4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
