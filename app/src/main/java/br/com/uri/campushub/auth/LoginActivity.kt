@@ -40,7 +40,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         buttonLogin.setOnClickListener {
-            //validar login
+            validateLogin()
         }
 
         findViewById<android.widget.TextView>(
