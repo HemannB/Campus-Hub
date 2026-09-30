@@ -18,6 +18,10 @@ class AuthViewModel: ViewModel() {
     private val _authState = MutableLiveData<AuthState>(AuthState.Idle)
     val authState: LiveData<AuthState> = _authState
 
+    fun isLoggedIn(): Boolean {
+        return repository.isLoggedIn()
+    }
+
     fun login(email: String, password: String) {
         _authState.value = AuthState.Loading
 
