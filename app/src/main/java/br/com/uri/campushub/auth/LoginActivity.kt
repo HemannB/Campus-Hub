@@ -2,9 +2,14 @@ package br.com.uri.campushub.auth
 
 import android.os.Bundle
 import android.util.Patterns
+import android.view.View
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import br.com.uri.campushub.R
+import br.com.uri.campushub.viewmodel.AuthState
+import br.com.uri.campushub.viewmodel.AuthViewModel
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -19,13 +24,18 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var buttonLogin : MaterialButton
     private lateinit var buttonGoogle : MaterialButton
+    private lateinit var progressLogin: ProgressBar
+
+    private lateinit var viewModel: AuthViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
         bindView()
+        setupViewModel()
         setupListeners()
+        observeAuthState()
     }
     private fun bindView() {
         layoutEmail = findViewById(R.id.layoutEmail)
@@ -36,11 +46,16 @@ class LoginActivity : AppCompatActivity() {
 
         buttonLogin = findViewById(R.id.buttonLogin)
         buttonGoogle = findViewById(R.id.buttonGoogle)
+        progressLogin = findViewById(R.id.progressLogin)
+    }
+
+    private fun setupViewModel() {
+        viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
     }
 
     private fun setupListeners() {
         buttonLogin.setOnClickListener {
-            validateLogin()
+            attemptLogin()
         }
 
         findViewById<android.widget.TextView>(
@@ -72,8 +87,33 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    private fun observeAuthState() {
+        viewModel.authState.observe(this) { state ->
+            when (state) {
+                AuthState.Idle -> setLoading(false)
+                AuthState.Loading -> setLoading(true)
+                AuthState.Success -> {
+                    setLoading(false)
+                    Toast.makeText(
+                        this,
+                        "Login realizado com sucesso.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                is AuthState.Error -> {
+                    setLoading(false)
+                    Toast.makeText(
+                        this,
+                        state.message,
+                        Toast.LENGTH_LONG
+                    ).show()
+                    viewModel.resetState()
+                }
+            }
+        }
+    }
 
-    private fun validateLogin() {
+    private fun attemptLogin() {
         clearErrors()
 
         val email = inputEmail.text
@@ -104,11 +144,15 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        Toast.makeText(
-            this,
-            "Dados válidos...",
-            Toast.LENGTH_SHORT
-        ).show()
+        viewModel.login(email, password)
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        progressLogin.visibility = if (isLoading) View.VISIBLE else View.GONE
+        buttonLogin.isEnabled = !isLoading
+        buttonGoogle.isEnabled = !isLoading
+        inputEmail.isEnabled = !isLoading
+        inputPassword.isEnabled = !isLoading
     }
 
     private fun clearErrors() {
