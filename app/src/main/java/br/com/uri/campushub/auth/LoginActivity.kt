@@ -73,11 +73,8 @@ class LoginActivity : AppCompatActivity() {
         findViewById<android.widget.TextView>(
             R.id.textRegister
         ).setOnClickListener {
-            Toast.makeText(
-                this,
-                "Tela de cadastro....",
-                Toast.LENGTH_SHORT
-            ).show()
+            val intent = Intent(this, RegisterActivity::class.java)
+            startActivity(intent)
         }
 
         buttonGoogle.setOnClickListener {

@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import br.com.uri.campushub.auth.LoginActivity
+import br.com.uri.campushub.auth.RegisterActivity
 import br.com.uri.campushub.student.HomeActivity
 import br.com.uri.campushub.viewmodel.AuthViewModel
 import com.google.android.material.button.MaterialButton
@@ -20,9 +21,15 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
 
         val buttonLogin = findViewById<MaterialButton>(R.id.buttonLogin)
+        val buttonRegister = findViewById<MaterialButton>(R.id.buttonRegister)
 
         buttonLogin.setOnClickListener {
             val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+        }
+
+        buttonRegister.setOnClickListener {
+            val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
         }
     }
