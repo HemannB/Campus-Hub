@@ -25,6 +25,10 @@ class AuthRepository(
             }
     }
 
+    fun logout() {
+        auth.signOut()
+    }
+
     fun register(
         email: String,
         password: String,

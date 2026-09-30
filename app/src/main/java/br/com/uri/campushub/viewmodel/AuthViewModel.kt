@@ -40,6 +40,10 @@ class AuthViewModel: ViewModel() {
         }
     }
 
+    fun logout() {
+        repository.logout()
+    }
+
     fun resetState() {
         _authState.value = AuthState.Idle
     }

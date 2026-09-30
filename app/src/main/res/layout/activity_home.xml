@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
@@ -44,6 +45,20 @@
                 android:text="Você entrou no CampusHub. A listagem de eventos será adicionada na próxima etapa do projeto."
                 android:textColor="#667085"
                 android:textSize="16sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonLogout"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="28dp"
+                android:text="Sair"
+                android:textAllCaps="false"
+                android:textColor="#1557D6"
+                android:textSize="16sp"
+                app:cornerRadius="18dp"
+                app:strokeColor="#B8C8E8"
+                app:strokeWidth="1dp" />
 
         </LinearLayout>
 
