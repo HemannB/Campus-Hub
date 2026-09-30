@@ -3,10 +3,16 @@ package br.com.uri.campushub.auth
 import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
+import android.view.View
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import br.com.uri.campushub.R
+import br.com.uri.campushub.student.HomeActivity
+import br.com.uri.campushub.viewmodel.RegisterState
+import br.com.uri.campushub.viewmodel.RegisterViewModel
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -28,13 +34,18 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var inputConfirmPassword: TextInputEditText
 
     private lateinit var buttonRegister: MaterialButton
+    private lateinit var progressRegister: ProgressBar
+
+    private lateinit var viewModel: RegisterViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
 
         bindViews()
+        setupViewModel()
         setupListeners()
+        observeRegisterState()
     }
 
     private fun bindViews() {
@@ -53,11 +64,16 @@ class RegisterActivity : AppCompatActivity() {
         inputConfirmPassword = findViewById(R.id.inputConfirmPassword)
 
         buttonRegister = findViewById(R.id.buttonRegister)
+        progressRegister = findViewById(R.id.progressRegister)
+    }
+
+    private fun setupViewModel() {
+        viewModel = ViewModelProvider(this)[RegisterViewModel::class.java]
     }
 
     private fun setupListeners() {
         buttonRegister.setOnClickListener {
-            validateRegistration()
+            attemptRegistration()
         }
 
         findViewById<TextView>(R.id.textLogin).setOnClickListener {
@@ -69,7 +85,29 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    private fun validateRegistration() {
+    private fun observeRegisterState() {
+        viewModel.registerState.observe(this) { state ->
+            when (state) {
+                RegisterState.Idle -> setLoading(false)
+                RegisterState.Loading -> setLoading(true)
+                RegisterState.Success -> {
+                    setLoading(false)
+                    navigateToHome()
+                }
+                is RegisterState.Error -> {
+                    setLoading(false)
+                    Toast.makeText(
+                        this,
+                        state.message,
+                        Toast.LENGTH_LONG
+                    ).show()
+                    viewModel.resetState()
+                }
+            }
+        }
+    }
+
+    private fun attemptRegistration() {
         clearErrors()
 
         val name = inputName.text?.toString()?.trim().orEmpty()
@@ -124,11 +162,31 @@ class RegisterActivity : AppCompatActivity() {
             return
         }
 
-        Toast.makeText(
-            this,
-            "Dados válidos.",
-            Toast.LENGTH_SHORT
-        ).show()
+        viewModel.register(
+            name = name,
+            email = email,
+            studentId = studentId,
+            course = course,
+            password = password
+        )
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        progressRegister.visibility = if (isLoading) View.VISIBLE else View.GONE
+        buttonRegister.isEnabled = !isLoading
+        inputName.isEnabled = !isLoading
+        inputEmail.isEnabled = !isLoading
+        inputStudentId.isEnabled = !isLoading
+        inputCourse.isEnabled = !isLoading
+        inputPassword.isEnabled = !isLoading
+        inputConfirmPassword.isEnabled = !isLoading
+    }
+
+    private fun navigateToHome() {
+        val intent = Intent(this, HomeActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
     }
 
     private fun clearErrors() {
