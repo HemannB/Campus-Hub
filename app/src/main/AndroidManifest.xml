@@ -13,6 +13,10 @@
         android:theme="@style/Theme.CampusHUB">
 
         <activity
+            android:name=".student.HomeActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".auth.LoginActivity"
             android:exported="false" />
 

@@ -1,5 +1,6 @@
 package br.com.uri.campushub.auth
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
 import android.view.View
@@ -8,6 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import br.com.uri.campushub.R
+import br.com.uri.campushub.student.HomeActivity
 import br.com.uri.campushub.viewmodel.AuthState
 import br.com.uri.campushub.viewmodel.AuthViewModel
 import com.google.android.material.button.MaterialButton
@@ -94,11 +96,7 @@ class LoginActivity : AppCompatActivity() {
                 AuthState.Loading -> setLoading(true)
                 AuthState.Success -> {
                     setLoading(false)
-                    Toast.makeText(
-                        this,
-                        "Login realizado com sucesso.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    navigateToHome()
                 }
                 is AuthState.Error -> {
                     setLoading(false)
@@ -111,6 +109,13 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun navigateToHome() {
+        val intent = Intent(this, HomeActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
     }
 
     private fun attemptLogin() {
