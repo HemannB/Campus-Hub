@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.ViewModelProvider
@@ -12,6 +13,8 @@ import br.com.uri.campushub.R
 import br.com.uri.campushub.model.Event
 import br.com.uri.campushub.viewmodel.EventDetailState
 import br.com.uri.campushub.viewmodel.EventDetailViewModel
+import br.com.uri.campushub.viewmodel.RegistrationState
+import br.com.uri.campushub.viewmodel.RegistrationViewModel
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
@@ -23,8 +26,11 @@ class EventDetailActivity : AppCompatActivity() {
         const val EXTRA_EVENT_ID = "event_id"
     }
 
-    private lateinit var viewModel: EventDetailViewModel
+    private lateinit var eventDetailViewModel: EventDetailViewModel
+    private lateinit var registrationViewModel: RegistrationViewModel
     private lateinit var eventId: String
+    private var currentEvent: Event? = null
+    private var currentRegistrationStatus: Boolean? = null
 
     private lateinit var scrollEventDetail: NestedScrollView
     private lateinit var progressEventDetail: ProgressBar
@@ -39,6 +45,7 @@ class EventDetailActivity : AppCompatActivity() {
     private lateinit var textLocation: TextView
     private lateinit var textOrganizer: TextView
     private lateinit var textParticipants: TextView
+    private lateinit var buttonRegistration: MaterialButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,11 +57,13 @@ class EventDetailActivity : AppCompatActivity() {
         setupViewModel()
         setupListeners()
         observeEventDetailState()
+        observeRegistrationState()
 
         if (eventId.isBlank()) {
             showError("Evento inválido.")
         } else {
-            viewModel.loadEvent(eventId)
+            eventDetailViewModel.loadEvent(eventId)
+            registrationViewModel.loadStatus(eventId)
         }
     }
 
@@ -72,10 +81,12 @@ class EventDetailActivity : AppCompatActivity() {
         textLocation = findViewById(R.id.textDetailLocation)
         textOrganizer = findViewById(R.id.textDetailOrganizer)
         textParticipants = findViewById(R.id.textDetailParticipants)
+        buttonRegistration = findViewById(R.id.buttonRegistration)
     }
 
     private fun setupViewModel() {
-        viewModel = ViewModelProvider(this)[EventDetailViewModel::class.java]
+        eventDetailViewModel = ViewModelProvider(this)[EventDetailViewModel::class.java]
+        registrationViewModel = ViewModelProvider(this)[RegistrationViewModel::class.java]
     }
 
     private fun setupListeners() {
@@ -88,17 +99,55 @@ class EventDetailActivity : AppCompatActivity() {
         }
 
         findViewById<MaterialButton>(R.id.buttonRetryDetail).setOnClickListener {
-            viewModel.loadEvent(eventId)
+            if (eventId.isNotBlank()) {
+                eventDetailViewModel.loadEvent(eventId)
+                registrationViewModel.loadStatus(eventId)
+            }
+        }
+
+        buttonRegistration.setOnClickListener {
+            registrationViewModel.toggleRegistration(eventId)
         }
     }
 
     private fun observeEventDetailState() {
-        viewModel.eventDetailState.observe(this) { state ->
+        eventDetailViewModel.eventDetailState.observe(this) { state ->
             when (state) {
                 EventDetailState.Idle -> showLoading(false)
                 EventDetailState.Loading -> showLoading(true)
                 is EventDetailState.Success -> showEvent(state.event)
                 is EventDetailState.Error -> showError(state.message)
+            }
+        }
+    }
+
+    private fun observeRegistrationState() {
+        registrationViewModel.registrationState.observe(this) { state ->
+            when (state) {
+                RegistrationState.Idle,
+                RegistrationState.Loading -> {
+                    buttonRegistration.visibility = View.GONE
+                }
+
+                is RegistrationState.Status -> {
+                    renderRegistrationButton(state.isRegistered)
+                }
+
+                is RegistrationState.Updating -> {
+                    showRegistrationLoading(state.isRegistered)
+                }
+
+                is RegistrationState.Success -> {
+                    renderRegistrationButton(state.isRegistered)
+                    Toast.makeText(this, state.message, Toast.LENGTH_SHORT).show()
+                    eventDetailViewModel.loadEvent(eventId)
+                }
+
+                is RegistrationState.Error -> {
+                    state.isRegistered?.let(::renderRegistrationButton)
+                        ?: run { buttonRegistration.visibility = View.GONE }
+                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
@@ -114,6 +163,7 @@ class EventDetailActivity : AppCompatActivity() {
 
     private fun showEvent(event: Event) {
         showLoading(false)
+        currentEvent = event
 
         textCategory.text = event.category.ifBlank { "Evento" }
         textTitle.text = event.title
@@ -126,6 +176,7 @@ class EventDetailActivity : AppCompatActivity() {
 
         layoutDetailError.visibility = View.GONE
         scrollEventDetail.visibility = View.VISIBLE
+        currentRegistrationStatus?.let(::renderRegistrationButton)
     }
 
     private fun showError(message: String) {
@@ -133,6 +184,32 @@ class EventDetailActivity : AppCompatActivity() {
         scrollEventDetail.visibility = View.GONE
         layoutDetailError.visibility = View.VISIBLE
         textDetailError.text = message
+    }
+
+    private fun renderRegistrationButton(isRegistered: Boolean) {
+        currentRegistrationStatus = isRegistered
+
+        val event = currentEvent ?: return
+        val isFull = event.maxParticipants > 0 &&
+            event.participantCount >= event.maxParticipants
+
+        buttonRegistration.visibility = View.VISIBLE
+        buttonRegistration.isEnabled = isRegistered || !isFull
+        buttonRegistration.text = when {
+            isRegistered -> "Cancelar inscrição"
+            isFull -> "Evento lotado"
+            else -> "Inscrever-se"
+        }
+    }
+
+    private fun showRegistrationLoading(isRegistered: Boolean) {
+        buttonRegistration.visibility = View.VISIBLE
+        buttonRegistration.isEnabled = false
+        buttonRegistration.text = if (isRegistered) {
+            "Cancelando inscrição..."
+        } else {
+            "Realizando inscrição..."
+        }
     }
 
     private fun formatDate(timestamp: Timestamp?): String {
