@@ -39,7 +39,10 @@ class HomeActivity : AppCompatActivity() {
         setupViewModels()
         observeEventState()
         buttonListeners()
+    }
 
+    override fun onResume() {
+        super.onResume()
         eventViewModel.loadEvents()
     }
 
@@ -76,6 +79,11 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun buttonListeners() {
+        findViewById<MaterialButton>(R.id.buttonMyEvents).setOnClickListener {
+            val intent = Intent(this, MyEventsActivity::class.java)
+            startActivity(intent)
+        }
+
         findViewById<MaterialButton>(R.id.buttonProfile).setOnClickListener {
             val intent = Intent(this, ProfileActivity::class.java)
             startActivity(intent)
