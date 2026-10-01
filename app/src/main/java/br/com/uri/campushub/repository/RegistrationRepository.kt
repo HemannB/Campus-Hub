@@ -8,6 +8,38 @@ class RegistrationRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
+    fun getRegisteredEventIds(
+        onResult: (Result<Set<String>>) -> Unit
+    ) {
+        val userId = auth.currentUser?.uid
+
+        if (userId == null) {
+            onResult(Result.failure(Exception("Usuário não autenticado.")))
+            return
+        }
+
+        firestore.collection("registrations")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val eventIds = task.result
+                        ?.documents
+                        ?.mapNotNull { document ->
+                            document.getString("eventId")
+                        }
+                        ?.toSet()
+                        .orEmpty()
+
+                    onResult(Result.success(eventIds))
+                } else {
+                    val exception = task.exception
+                        ?: Exception("Não foi possível carregar suas inscrições.")
+                    onResult(Result.failure(exception))
+                }
+            }
+    }
+
     fun getRegistrationStatus(
         eventId: String,
         onResult: (Result<Boolean>) -> Unit
