@@ -73,6 +73,10 @@ class AuthRepository(
             }
     }
 
+    fun currentUserId(): String? {
+        return auth.currentUser?.uid
+    }
+
     fun rollbackRegistration(onComplete: () -> Unit) {
         val currentUser = auth.currentUser
 

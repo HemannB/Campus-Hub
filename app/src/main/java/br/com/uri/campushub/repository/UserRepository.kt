@@ -23,4 +23,33 @@ class UserRepository(
                 }
             }
     }
+
+    fun getProfile(
+        userId: String,
+        onResult: (Result<User>) -> Unit
+    ) {
+        firestore.collection("users")
+            .document(userId)
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = task.result?.toObject(User::class.java)
+
+                    if (user != null) {
+                        onResult(Result.success(user))
+                    } else {
+                        onResult(
+                            Result.failure(
+                                Exception("Perfil não encontrado.")
+                            )
+                        )
+                    }
+                } else {
+                    val exception = task.exception
+                        ?: Exception("Não foi possível carregar o perfil.")
+
+                    onResult(Result.failure(exception))
+                }
+            }
+    }
 }
