@@ -63,11 +63,8 @@ class LoginActivity : AppCompatActivity() {
         findViewById<android.widget.TextView>(
             R.id.textForgotPassword
         ).setOnClickListener {
-            Toast.makeText(
-                this,
-                "Recuperação de senha...",
-                Toast.LENGTH_SHORT
-            ).show()
+            val intent = Intent(this, ForgotPasswordActivity::class.java)
+            startActivity(intent)
         }
 
         findViewById<android.widget.TextView>(
