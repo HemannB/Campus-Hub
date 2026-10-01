@@ -52,7 +52,9 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        eventAdapter = EventAdapter()
+        eventAdapter = EventAdapter { event ->
+            navigateToEventDetails(event.id)
+        }
         recyclerEvents.layoutManager = LinearLayoutManager(this)
         recyclerEvents.adapter = eventAdapter
     }
@@ -117,6 +119,13 @@ class HomeActivity : AppCompatActivity() {
         layoutEventMessage.visibility = View.VISIBLE
         textEventMessage.text = message
         buttonRetryEvents.visibility = if (canRetry) View.VISIBLE else View.GONE
+    }
+
+    private fun navigateToEventDetails(eventId: String) {
+        val intent = Intent(this, EventDetailActivity::class.java).apply {
+            putExtra(EventDetailActivity.EXTRA_EVENT_ID, eventId)
+        }
+        startActivity(intent)
     }
 
     private fun navigateToMain() {

@@ -10,7 +10,9 @@ import br.com.uri.campushub.model.Event
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class EventAdapter : RecyclerView.Adapter<EventAdapter.EventViewHolder>() {
+class EventAdapter(
+    private val onEventClick: (Event) -> Unit
+) : RecyclerView.Adapter<EventAdapter.EventViewHolder>() {
 
     private val events = mutableListOf<Event>()
 
@@ -28,7 +30,11 @@ class EventAdapter : RecyclerView.Adapter<EventAdapter.EventViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: EventViewHolder, position: Int) {
-        holder.bind(events[position])
+        val event = events[position]
+        holder.bind(event)
+        holder.itemView.setOnClickListener {
+            onEventClick(event)
+        }
     }
 
     override fun getItemCount(): Int = events.size
