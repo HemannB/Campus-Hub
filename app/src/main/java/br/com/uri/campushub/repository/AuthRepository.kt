@@ -29,6 +29,23 @@ class AuthRepository(
         auth.signOut()
     }
 
+    fun resetPassword(
+        email: String,
+        onResult: (Result<Unit>) -> Unit
+    ) {
+        auth.useAppLanguage()
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onResult(Result.success(Unit))
+                } else {
+                    val exception = task.exception
+                        ?: Exception("Não foi possível enviar o e-mail de recuperação.")
+                    onResult(Result.failure(exception))
+                }
+            }
+    }
+
     fun register(
         email: String,
         password: String,
