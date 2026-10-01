@@ -18,7 +18,14 @@ class HomeActivity : AppCompatActivity() {
         setContentView(R.layout.activity_home)
 
         viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
+        buttonListeners()
 
+    }
+    private fun buttonListeners() {
+        findViewById<MaterialButton>(R.id.buttonProfile).setOnClickListener {
+            val intent = Intent(this, ProfileActivity::class.java)
+            startActivity(intent)
+        }
         findViewById<MaterialButton>(R.id.buttonLogout).setOnClickListener {
             viewModel.logout()
             navigateToMain()
