@@ -4,51 +4,27 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
 import android.view.View
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import br.com.uri.campushub.R
+import br.com.uri.campushub.databinding.ActivityLoginBinding
 import br.com.uri.campushub.student.HomeActivity
 import br.com.uri.campushub.viewmodel.AuthState
 import br.com.uri.campushub.viewmodel.AuthViewModel
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var layoutEmail : TextInputLayout
-    private lateinit var layoutPassword : TextInputLayout
-
-    private lateinit var inputEmail : TextInputEditText
-    private lateinit var inputPassword : TextInputEditText
-
-    private lateinit var buttonLogin : MaterialButton
-    private lateinit var buttonGoogle : MaterialButton
-    private lateinit var progressLogin: ProgressBar
-
+    private lateinit var binding: ActivityLoginBinding
     private lateinit var viewModel: AuthViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        binding = ActivityLoginBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        bindView()
         setupViewModel()
         setupListeners()
         observeAuthState()
-    }
-    private fun bindView() {
-        layoutEmail = findViewById(R.id.layoutEmail)
-        layoutPassword = findViewById(R.id.layoutPassword)
-
-        inputEmail = findViewById(R.id.inputEmail)
-        inputPassword = findViewById(R.id.inputPassword)
-
-        buttonLogin = findViewById(R.id.buttonLogin)
-        buttonGoogle = findViewById(R.id.buttonGoogle)
-        progressLogin = findViewById(R.id.progressLogin)
     }
 
     private fun setupViewModel() {
@@ -56,25 +32,21 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        buttonLogin.setOnClickListener {
+        binding.buttonLogin.setOnClickListener {
             attemptLogin()
         }
 
-        findViewById<android.widget.TextView>(
-            R.id.textForgotPassword
-        ).setOnClickListener {
+        binding.textForgotPassword.setOnClickListener {
             val intent = Intent(this, ForgotPasswordActivity::class.java)
             startActivity(intent)
         }
 
-        findViewById<android.widget.TextView>(
-            R.id.textRegister
-        ).setOnClickListener {
+        binding.textRegister.setOnClickListener {
             val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
         }
 
-        buttonGoogle.setOnClickListener {
+        binding.buttonGoogle.setOnClickListener {
             Toast.makeText(
                 this,
                 "Login com Google...",
@@ -115,31 +87,31 @@ class LoginActivity : AppCompatActivity() {
     private fun attemptLogin() {
         clearErrors()
 
-        val email = inputEmail.text
+        val email = binding.inputEmail.text
             ?.toString()
             ?.trim()
             .orEmpty()
 
-        val password = inputPassword.text
+        val password = binding.inputPassword.text
             ?.toString()
             .orEmpty()
 
         var isValid = true
 
-        if(email.isBlank()) {
-            layoutEmail.error = "Informe seu e-mail."
+        if (email.isBlank()) {
+            binding.layoutEmail.error = "Informe seu e-mail."
             isValid = false
-        } else if(!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            layoutEmail.error = "Informe um e-mail valido."
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            binding.layoutEmail.error = "Informe um e-mail válido."
             isValid = false
         }
 
-        if(password.isBlank()){
-            layoutPassword.error = "Informe sua senha."
-            isValid = false;
+        if (password.isBlank()) {
+            binding.layoutPassword.error = "Informe sua senha."
+            isValid = false
         }
 
-        if (!isValid){
+        if (!isValid) {
             return
         }
 
@@ -147,17 +119,15 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setLoading(isLoading: Boolean) {
-        progressLogin.visibility = if (isLoading) View.VISIBLE else View.GONE
-        buttonLogin.isEnabled = !isLoading
-        buttonGoogle.isEnabled = !isLoading
-        inputEmail.isEnabled = !isLoading
-        inputPassword.isEnabled = !isLoading
+        binding.progressLogin.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.buttonLogin.isEnabled = !isLoading
+        binding.buttonGoogle.isEnabled = !isLoading
+        binding.inputEmail.isEnabled = !isLoading
+        binding.inputPassword.isEnabled = !isLoading
     }
 
     private fun clearErrors() {
-        layoutEmail.error = null
-        layoutPassword.error = null
+        binding.layoutEmail.error = null
+        binding.layoutPassword.error = null
     }
-
-
 }
