@@ -3,35 +3,25 @@ package br.com.uri.campushub.student
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import br.com.uri.campushub.R
+import br.com.uri.campushub.databinding.ActivityMyEventsBinding
 import br.com.uri.campushub.model.Event
 import br.com.uri.campushub.viewmodel.EventState
 import br.com.uri.campushub.viewmodel.MyEventsViewModel
-import com.google.android.material.button.MaterialButton
 
 class MyEventsActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityMyEventsBinding
     private lateinit var viewModel: MyEventsViewModel
     private lateinit var eventAdapter: EventAdapter
 
-    private lateinit var recyclerMyEvents: RecyclerView
-    private lateinit var progressMyEvents: ProgressBar
-    private lateinit var layoutMyEventsMessage: LinearLayout
-    private lateinit var textMyEventsMessage: TextView
-    private lateinit var buttonRetryMyEvents: MaterialButton
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_my_events)
+        binding = ActivityMyEventsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        bindViews()
         setupRecyclerView()
         setupViewModel()
         setupListeners()
@@ -43,20 +33,12 @@ class MyEventsActivity : AppCompatActivity() {
         viewModel.loadEvents()
     }
 
-    private fun bindViews() {
-        recyclerMyEvents = findViewById(R.id.recyclerMyEvents)
-        progressMyEvents = findViewById(R.id.progressMyEvents)
-        layoutMyEventsMessage = findViewById(R.id.layoutMyEventsMessage)
-        textMyEventsMessage = findViewById(R.id.textMyEventsMessage)
-        buttonRetryMyEvents = findViewById(R.id.buttonRetryMyEvents)
-    }
-
     private fun setupRecyclerView() {
         eventAdapter = EventAdapter { event ->
             navigateToEventDetails(event.id)
         }
-        recyclerMyEvents.layoutManager = LinearLayoutManager(this)
-        recyclerMyEvents.adapter = eventAdapter
+        binding.recyclerMyEvents.layoutManager = LinearLayoutManager(this)
+        binding.recyclerMyEvents.adapter = eventAdapter
     }
 
     private fun setupViewModel() {
@@ -64,11 +46,11 @@ class MyEventsActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        findViewById<MaterialButton>(R.id.buttonBackMyEvents).setOnClickListener {
+        binding.buttonBackMyEvents.setOnClickListener {
             finish()
         }
 
-        buttonRetryMyEvents.setOnClickListener {
+        binding.buttonRetryMyEvents.setOnClickListener {
             viewModel.loadEvents()
         }
     }
@@ -85,11 +67,11 @@ class MyEventsActivity : AppCompatActivity() {
     }
 
     private fun showLoading(isLoading: Boolean) {
-        progressMyEvents.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.progressMyEvents.visibility = if (isLoading) View.VISIBLE else View.GONE
 
         if (isLoading) {
-            recyclerMyEvents.visibility = View.GONE
-            layoutMyEventsMessage.visibility = View.GONE
+            binding.recyclerMyEvents.visibility = View.GONE
+            binding.layoutMyEventsMessage.visibility = View.GONE
         }
     }
 
@@ -102,16 +84,16 @@ class MyEventsActivity : AppCompatActivity() {
         }
 
         eventAdapter.updateEvents(events)
-        recyclerMyEvents.visibility = View.VISIBLE
-        layoutMyEventsMessage.visibility = View.GONE
+        binding.recyclerMyEvents.visibility = View.VISIBLE
+        binding.layoutMyEventsMessage.visibility = View.GONE
     }
 
     private fun showMessage(message: String, canRetry: Boolean) {
         showLoading(false)
-        recyclerMyEvents.visibility = View.GONE
-        layoutMyEventsMessage.visibility = View.VISIBLE
-        textMyEventsMessage.text = message
-        buttonRetryMyEvents.visibility = if (canRetry) View.VISIBLE else View.GONE
+        binding.recyclerMyEvents.visibility = View.GONE
+        binding.layoutMyEventsMessage.visibility = View.VISIBLE
+        binding.textMyEventsMessage.text = message
+        binding.buttonRetryMyEvents.visibility = if (canRetry) View.VISIBLE else View.GONE
     }
 
     private fun navigateToEventDetails(eventId: String) {
