@@ -84,10 +84,6 @@ O projeto usa uma arquitetura simples inspirada em MVVM:
 Activity -> ViewModel -> Repository -> Firebase
 ```
 
-As Activities acessam os componentes XML com View Binding e observam estados publicados pelos ViewModels. Os repositórios concentram as chamadas ao Firebase. Não há camadas extras de casos de uso ou injeção de dependência porque elas ainda não trariam benefício proporcional ao tamanho do projeto.
-
-Uma explicação detalhada dos arquivos, fluxos e regras do Firestore está em [docs/GUIA_DE_ARQUITETURA_E_FLUXOS.md](docs/GUIA_DE_ARQUITETURA_E_FLUXOS.md).
-
 ## Observação
 
 O CampusHub é um projeto acadêmico e não está pronto para uso em produção. As funcionalidades são implementadas gradualmente conforme o desenvolvimento da disciplina.
