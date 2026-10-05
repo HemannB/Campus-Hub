@@ -40,8 +40,9 @@ class RegistrationViewModel : ViewModel() {
                 },
                 onFailure = { exception ->
                     RegistrationState.Error(
-                        message = exception.message
-                            ?: "Não foi possível consultar a inscrição.",
+                        message = exception.toUserMessage(
+                            "Não foi possível consultar a inscrição."
+                        ),
                         isRegistered = currentStatus
                     )
                 }
@@ -68,8 +69,9 @@ class RegistrationViewModel : ViewModel() {
                 },
                 onFailure = { exception ->
                     RegistrationState.Error(
-                        message = exception.message
-                            ?: "Não foi possível atualizar a inscrição.",
+                        message = exception.toUserMessage(
+                            "Não foi possível atualizar a inscrição."
+                        ),
                         isRegistered = isRegistered
                     )
                 }

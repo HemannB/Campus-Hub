@@ -43,8 +43,9 @@ class MyEventsViewModel : ViewModel() {
                 },
                 onFailure = { exception ->
                     EventState.Error(
-                        exception.message
-                            ?: "Não foi possível carregar seus eventos."
+                        exception.toUserMessage(
+                            "Não foi possível carregar seus eventos."
+                        )
                     )
                 }
             )
@@ -53,8 +54,9 @@ class MyEventsViewModel : ViewModel() {
 
     private fun showError(exception: Throwable) {
         _eventState.value = EventState.Error(
-            exception.message
-                ?: "Não foi possível carregar seus eventos."
+            exception.toUserMessage(
+                "Não foi possível carregar seus eventos."
+            )
         )
     }
 }

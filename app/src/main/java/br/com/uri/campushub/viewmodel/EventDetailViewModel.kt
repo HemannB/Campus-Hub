@@ -30,8 +30,9 @@ class EventDetailViewModel : ViewModel() {
                 },
                 onFailure = { exception ->
                     EventDetailState.Error(
-                        exception.message
-                            ?: "Não foi possível carregar o evento."
+                        exception.toUserMessage(
+                            "Não foi possível carregar o evento."
+                        )
                     )
                 }
             )
