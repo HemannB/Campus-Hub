@@ -47,7 +47,9 @@ class RegisterViewModel : ViewModel() {
                 },
                 onFailure = { exception ->
                     _registerState.value = RegisterState.Error(
-                        exception.message ?: "Não foi possível criar a conta."
+                        exception.toUserMessage(
+                            "Não foi possível criar a conta."
+                        )
                     )
                 }
             )
@@ -63,7 +65,9 @@ class RegisterViewModel : ViewModel() {
                 onFailure = { exception ->
                     authRepository.rollbackRegistration {
                         _registerState.value = RegisterState.Error(
-                            exception.message ?: "Não foi possível salvar o perfil."
+                            exception.toUserMessage(
+                                "Não foi possível salvar o perfil."
+                            )
                         )
                     }
                 }

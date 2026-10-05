@@ -32,8 +32,9 @@ class AuthViewModel: ViewModel() {
                 },
                 onFailure = { exception ->
                     AuthState.Error(
-                        exception.message
-                            ?: "Não foi possível realizar o login."
+                        exception.toUserMessage(
+                            "Não foi possível realizar o login."
+                        )
                     )
                 }
             )

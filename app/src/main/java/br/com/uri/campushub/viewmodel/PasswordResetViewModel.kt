@@ -27,9 +27,11 @@ class PasswordResetViewModel : ViewModel() {
                 onSuccess = {
                     PasswordResetState.Success
                 },
-                onFailure = {
+                onFailure = { exception ->
                     PasswordResetState.Error(
-                        "Não foi possível enviar o e-mail. Tente novamente."
+                        exception.toUserMessage(
+                            "Não foi possível enviar o e-mail. Tente novamente."
+                        )
                     )
                 }
             )
