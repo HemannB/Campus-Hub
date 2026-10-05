@@ -6,6 +6,35 @@ import com.google.firebase.firestore.FirebaseFirestore
 class UserRepository(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
+    fun updateProfile(
+        userId: String,
+        name: String,
+        studentId: String,
+        course: String,
+        semester: String,
+        onResult: (Result<Unit>) -> Unit
+    ) {
+        val profileUpdates = mapOf(
+            "name" to name,
+            "studentId" to studentId,
+            "course" to course,
+            "semester" to semester
+        )
+
+        firestore.collection("users")
+            .document(userId)
+            .update(profileUpdates)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onResult(Result.success(Unit))
+                } else {
+                    val exception = task.exception
+                        ?: Exception("Não foi possível atualizar o perfil.")
+                    onResult(Result.failure(exception))
+                }
+            }
+    }
+
     fun createProfile(
         user: User,
         onResult: (Result<Unit>) -> Unit
