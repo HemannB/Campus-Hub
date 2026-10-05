@@ -40,8 +40,9 @@ class ProfileViewModel : ViewModel() {
                 },
                 onFailure = { exception ->
                     ProfileState.Error(
-                        exception.message
-                            ?: "Não foi possível carregar o perfil."
+                        exception.toUserMessage(
+                            "Não foi possível carregar o perfil."
+                        )
                     )
                 }
             )

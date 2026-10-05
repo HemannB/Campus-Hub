@@ -46,8 +46,9 @@ class EditProfileViewModel : ViewModel() {
                 },
                 onFailure = { exception ->
                     EditProfileState.Error(
-                        exception.message
-                            ?: "Não foi possível carregar o perfil."
+                        exception.toUserMessage(
+                            "Não foi possível carregar o perfil."
+                        )
                     )
                 }
             )
@@ -90,8 +91,9 @@ class EditProfileViewModel : ViewModel() {
                 },
                 onFailure = { exception ->
                     EditProfileState.Error(
-                        exception.message
-                            ?: "Não foi possível atualizar o perfil."
+                        exception.toUserMessage(
+                            "Não foi possível atualizar o perfil."
+                        )
                     )
                 }
             )
