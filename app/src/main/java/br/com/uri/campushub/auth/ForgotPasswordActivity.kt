@@ -3,42 +3,26 @@ package br.com.uri.campushub.auth
 import android.os.Bundle
 import android.util.Patterns
 import android.view.View
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import br.com.uri.campushub.R
+import br.com.uri.campushub.databinding.ActivityForgotPasswordBinding
 import br.com.uri.campushub.viewmodel.PasswordResetState
 import br.com.uri.campushub.viewmodel.PasswordResetViewModel
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 
 class ForgotPasswordActivity : AppCompatActivity() {
 
-    private lateinit var layoutEmail: TextInputLayout
-    private lateinit var inputEmail: TextInputEditText
-    private lateinit var buttonSendReset: MaterialButton
-    private lateinit var progressReset: ProgressBar
-
+    private lateinit var binding: ActivityForgotPasswordBinding
     private lateinit var viewModel: PasswordResetViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_forgot_password)
+        binding = ActivityForgotPasswordBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        bindViews()
         setupViewModel()
         setupListeners()
         observeResetState()
-    }
-
-    private fun bindViews() {
-        layoutEmail = findViewById(R.id.layoutEmail)
-        inputEmail = findViewById(R.id.inputEmail)
-        buttonSendReset = findViewById(R.id.buttonSendReset)
-        progressReset = findViewById(R.id.progressReset)
     }
 
     private fun setupViewModel() {
@@ -46,11 +30,11 @@ class ForgotPasswordActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        buttonSendReset.setOnClickListener {
+        binding.buttonSendReset.setOnClickListener {
             requestPasswordReset()
         }
 
-        findViewById<TextView>(R.id.textBackToLogin).setOnClickListener {
+        binding.textBackToLogin.setOnClickListener {
             finish()
         }
     }
@@ -84,20 +68,20 @@ class ForgotPasswordActivity : AppCompatActivity() {
     }
 
     private fun requestPasswordReset() {
-        layoutEmail.error = null
+        binding.layoutEmail.error = null
 
-        val email = inputEmail.text
+        val email = binding.inputEmail.text
             ?.toString()
             ?.trim()
             .orEmpty()
 
         if (email.isBlank()) {
-            layoutEmail.error = "Informe seu e-mail."
+            binding.layoutEmail.error = "Informe seu e-mail."
             return
         }
 
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            layoutEmail.error = "Informe um e-mail válido."
+            binding.layoutEmail.error = "Informe um e-mail válido."
             return
         }
 
@@ -105,8 +89,8 @@ class ForgotPasswordActivity : AppCompatActivity() {
     }
 
     private fun setLoading(isLoading: Boolean) {
-        progressReset.visibility = if (isLoading) View.VISIBLE else View.GONE
-        buttonSendReset.isEnabled = !isLoading
-        inputEmail.isEnabled = !isLoading
+        binding.progressReset.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.buttonSendReset.isEnabled = !isLoading
+        binding.inputEmail.isEnabled = !isLoading
     }
 }
