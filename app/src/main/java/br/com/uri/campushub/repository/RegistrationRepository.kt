@@ -83,18 +83,18 @@ class RegistrationRepository(
             val registrationSnapshot = transaction.get(registrationDocument)
 
             if (!eventSnapshot.exists()) {
-                throw Exception("Evento não encontrado.")
+                throw IllegalStateException("Evento não encontrado.")
             }
 
             if (registrationSnapshot.exists()) {
-                throw Exception("Você já está inscrito neste evento.")
+                throw IllegalStateException("Você já está inscrito neste evento.")
             }
 
             val participantCount = eventSnapshot.getLong("participantCount") ?: 0L
             val maxParticipants = eventSnapshot.getLong("maxParticipants") ?: 0L
 
             if (maxParticipants > 0 && participantCount >= maxParticipants) {
-                throw Exception("Não há vagas disponíveis neste evento.")
+                throw IllegalStateException("Não há vagas disponíveis neste evento.")
             }
 
             val registration = hashMapOf(
@@ -134,11 +134,11 @@ class RegistrationRepository(
             val registrationSnapshot = transaction.get(registrationDocument)
 
             if (!eventSnapshot.exists()) {
-                throw Exception("Evento não encontrado.")
+                throw IllegalStateException("Evento não encontrado.")
             }
 
             if (!registrationSnapshot.exists()) {
-                throw Exception("Inscrição não encontrada.")
+                throw IllegalStateException("Inscrição não encontrada.")
             }
 
             val participantCount = eventSnapshot.getLong("participantCount") ?: 0L
@@ -173,10 +173,12 @@ class RegistrationRepository(
         if (isSuccessful) {
             onResult(Result.success(Unit))
         } else {
-            val message = exception?.cause?.message
-                ?: exception?.message
-                ?: defaultMessage
-            onResult(Result.failure(Exception(message)))
+            val businessError = exception?.cause
+                ?.takeIf { it is IllegalStateException }
+            val error = businessError
+                ?: exception
+                ?: Exception(defaultMessage)
+            onResult(Result.failure(error))
         }
     }
 }
