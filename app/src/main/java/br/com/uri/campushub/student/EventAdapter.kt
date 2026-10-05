@@ -2,6 +2,8 @@ package br.com.uri.campushub.student
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import br.com.uri.campushub.databinding.ItemEventBinding
 import br.com.uri.campushub.model.Event
@@ -10,14 +12,10 @@ import java.util.Locale
 
 class EventAdapter(
     private val onEventClick: (Event) -> Unit
-) : RecyclerView.Adapter<EventAdapter.EventViewHolder>() {
-
-    private val events = mutableListOf<Event>()
+) : ListAdapter<Event, EventAdapter.EventViewHolder>(EventDiffCallback) {
 
     fun updateEvents(newEvents: List<Event>) {
-        events.clear()
-        events.addAll(newEvents)
-        notifyDataSetChanged()
+        submitList(newEvents)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
@@ -31,11 +29,9 @@ class EventAdapter(
     }
 
     override fun onBindViewHolder(holder: EventViewHolder, position: Int) {
-        val event = events[position]
+        val event = getItem(position)
         holder.bind(event, onEventClick)
     }
-
-    override fun getItemCount(): Int = events.size
 
     class EventViewHolder(
         private val binding: ItemEventBinding
@@ -67,5 +63,15 @@ class EventAdapter(
                 "${event.participantCount} inscritos"
             }
         }
+    }
+}
+
+private object EventDiffCallback : DiffUtil.ItemCallback<Event>() {
+    override fun areItemsTheSame(oldItem: Event, newItem: Event): Boolean {
+        return oldItem.id == newItem.id
+    }
+
+    override fun areContentsTheSame(oldItem: Event, newItem: Event): Boolean {
+        return oldItem == newItem
     }
 }
