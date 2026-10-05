@@ -1,11 +1,9 @@
 package br.com.uri.campushub.student
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import br.com.uri.campushub.R
+import br.com.uri.campushub.databinding.ItemEventBinding
 import br.com.uri.campushub.model.Event
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -23,36 +21,33 @@ class EventAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_event, parent, false)
+        val binding = ItemEventBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
 
-        return EventViewHolder(view)
+        return EventViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: EventViewHolder, position: Int) {
         val event = events[position]
-        holder.bind(event)
-        holder.itemView.setOnClickListener {
-            onEventClick(event)
-        }
+        holder.bind(event, onEventClick)
     }
 
     override fun getItemCount(): Int = events.size
 
-    class EventViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class EventViewHolder(
+        private val binding: ItemEventBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
 
-        private val textCategory: TextView = itemView.findViewById(R.id.textEventCategory)
-        private val textTitle: TextView = itemView.findViewById(R.id.textEventTitle)
-        private val textDate: TextView = itemView.findViewById(R.id.textEventDate)
-        private val textLocation: TextView = itemView.findViewById(R.id.textEventLocation)
-        private val textParticipants: TextView = itemView.findViewById(R.id.textEventParticipants)
-
-        fun bind(event: Event) {
-            textCategory.text = event.category.ifBlank { "Evento" }
-            textTitle.text = event.title
-            textDate.text = formatDate(event)
-            textLocation.text = event.location.ifBlank { "Local a definir" }
-            textParticipants.text = formatParticipants(event)
+        fun bind(event: Event, onEventClick: (Event) -> Unit) {
+            binding.textEventCategory.text = event.category.ifBlank { "Evento" }
+            binding.textEventTitle.text = event.title
+            binding.textEventDate.text = formatDate(event)
+            binding.textEventLocation.text = event.location.ifBlank { "Local a definir" }
+            binding.textEventParticipants.text = formatParticipants(event)
+            binding.root.setOnClickListener { onEventClick(event) }
         }
 
         private fun formatDate(event: Event): String {
