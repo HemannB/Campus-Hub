@@ -3,37 +3,24 @@ package br.com.uri.campushub.student
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import br.com.uri.campushub.R
+import br.com.uri.campushub.databinding.ActivityProfileBinding
 import br.com.uri.campushub.model.User
 import br.com.uri.campushub.viewmodel.ProfileState
 import br.com.uri.campushub.viewmodel.ProfileViewModel
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.card.MaterialCardView
 
 class ProfileActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityProfileBinding
     private lateinit var viewModel: ProfileViewModel
-
-    private lateinit var progressProfile: ProgressBar
-    private lateinit var cardProfile: MaterialCardView
-
-    private lateinit var textName: TextView
-    private lateinit var textEmail: TextView
-    private lateinit var textStudentId: TextView
-    private lateinit var textCourse: TextView
-    private lateinit var textSemester: TextView
-    private lateinit var buttonEditProfile: MaterialButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_profile)
+        binding = ActivityProfileBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        bindViews()
         setupViewModel()
         setupListeners()
         observeProfileState()
@@ -44,24 +31,12 @@ class ProfileActivity : AppCompatActivity() {
         viewModel.loadProfile()
     }
 
-    private fun bindViews() {
-        progressProfile = findViewById(R.id.progressProfile)
-        cardProfile = findViewById(R.id.cardProfile)
-
-        textName = findViewById(R.id.textName)
-        textEmail = findViewById(R.id.textEmail)
-        textStudentId = findViewById(R.id.textStudentId)
-        textCourse = findViewById(R.id.textCourse)
-        textSemester = findViewById(R.id.textSemester)
-        buttonEditProfile = findViewById(R.id.buttonEditProfile)
-    }
-
     private fun setupViewModel() {
         viewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
     }
 
     private fun setupListeners() {
-        buttonEditProfile.setOnClickListener {
+        binding.buttonEditProfile.setOnClickListener {
             val intent = Intent(this, EditProfileActivity::class.java)
             startActivity(intent)
         }
@@ -96,23 +71,23 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun setLoading(isLoading: Boolean) {
-        progressProfile.visibility =
+        binding.progressProfile.visibility =
             if (isLoading) View.VISIBLE else View.GONE
 
         if (isLoading) {
-            cardProfile.visibility = View.GONE
-            buttonEditProfile.visibility = View.GONE
+            binding.cardProfile.visibility = View.GONE
+            binding.buttonEditProfile.visibility = View.GONE
         }
     }
 
     private fun showProfile(user: User) {
-        textName.text = user.name
-        textEmail.text = user.email
-        textStudentId.text = user.studentId
-        textCourse.text = user.course
-        textSemester.text = user.semester.ifBlank { "Não informado" }
+        binding.textName.text = user.name
+        binding.textEmail.text = user.email
+        binding.textStudentId.text = user.studentId
+        binding.textCourse.text = user.course
+        binding.textSemester.text = user.semester.ifBlank { "Não informado" }
 
-        cardProfile.visibility = View.VISIBLE
-        buttonEditProfile.visibility = View.VISIBLE
+        binding.cardProfile.visibility = View.VISIBLE
+        binding.buttonEditProfile.visibility = View.VISIBLE
     }
 }
