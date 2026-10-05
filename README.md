@@ -2,7 +2,7 @@
 
 O CampusHub é um aplicativo Android voltado à comunidade acadêmica. A proposta é reunir, em um único lugar, os eventos oferecidos pela universidade e permitir que os alunos consultem as informações e gerenciem suas inscrições.
 
-O projeto está sendo desenvolvido como atividade acadêmica da disciplina de Desenvolvimento Mobile e ainda se encontra em fase inicial.
+O projeto está sendo desenvolvido como atividade acadêmica da disciplina de Desenvolvimento Mobile. O fluxo principal solicitado inicialmente já está funcional e o aplicativo continua evoluindo em etapas.
 
 ## Objetivo
 
@@ -17,28 +17,33 @@ O aplicativo deverá permitir que o aluno:
 - inscreva-se ou cancele sua inscrição;
 - consulte os eventos em que está inscrito na tela **Meus Eventos**.
 
-A estrutura poderá ser ampliada futuramente, mas o foco atual é atender a esse fluxo principal do aluno de maneira simples e fácil de manter.
+A estrutura foi mantida simples para que novas funcionalidades possam ser acrescentadas sem misturar interface, estado da tela e acesso ao Firebase.
 
 ## Estado atual
 
-Neste momento, o projeto possui:
+Neste momento, estão implementados:
 
-- tela inicial do CampusHub;
-- navegação da tela inicial para a tela de login;
-- interface da tela de login;
-- validação local inicial dos campos de e-mail e senha;
-- configuração base do projeto no Firebase.
+- cadastro com criação da conta no Firebase Authentication e do perfil no Firestore;
+- login, logout, restauração de sessão e recuperação de senha;
+- consulta e edição do perfil;
+- listagem e detalhes de eventos;
+- inscrição e cancelamento com controle de vagas;
+- tela **Meus Eventos**;
+- estados de carregamento, lista vazia e erro.
 
-O login com Firebase, o cadastro, a recuperação de senha e as funcionalidades de eventos ainda estão em desenvolvimento.
+A próxima etapa proposta para a disciplina ainda está pendente: favoritos, comentários, avaliações e busca/filtros de eventos.
 
 ## Tecnologias
 
 - Kotlin;
 - Android SDK nativo;
 - layouts em XML;
+- View Binding;
+- ViewModel e LiveData;
 - Material Components;
 - Gradle com Kotlin DSL;
-- Firebase, inicialmente para autenticação e banco de dados.
+- Firebase Authentication;
+- Cloud Firestore.
 
 ## Como executar
 
@@ -65,16 +70,24 @@ O login com Firebase, o cadastro, a recuperação de senha e as funcionalidades 
 
 5. Execute o módulo `app` pelo botão **Run** do Android Studio.
 
-## Organização planejada
+Também é possível validar o projeto pelo terminal, na raiz do repositório:
 
-O projeto seguirá uma arquitetura simples inspirada em MVVM:
+```bash
+./gradlew assembleDebug
+```
+
+## Organização do código
+
+O projeto usa uma arquitetura simples inspirada em MVVM:
 
 ```text
 Activity -> ViewModel -> Repository -> Firebase
 ```
 
-Essa separação mantém as telas responsáveis pela interface, os ViewModels pelo estado da UI e os repositórios pelo acesso aos serviços do Firebase, sem adicionar complexidade desnecessária ao projeto acadêmico.
+As Activities acessam os componentes XML com View Binding e observam estados publicados pelos ViewModels. Os repositórios concentram as chamadas ao Firebase. Não há camadas extras de casos de uso ou injeção de dependência porque elas ainda não trariam benefício proporcional ao tamanho do projeto.
+
+Uma explicação detalhada dos arquivos, fluxos e regras do Firestore está em [docs/GUIA_DE_ARQUITETURA_E_FLUXOS.md](docs/GUIA_DE_ARQUITETURA_E_FLUXOS.md).
 
 ## Observação
 
-O CampusHub ainda não está pronto para uso em produção. As funcionalidades serão implementadas gradualmente conforme o desenvolvimento da disciplina.
+O CampusHub é um projeto acadêmico e não está pronto para uso em produção. As funcionalidades são implementadas gradualmente conforme o desenvolvimento da disciplina.
