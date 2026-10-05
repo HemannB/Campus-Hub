@@ -4,67 +4,27 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
 import android.view.View
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import br.com.uri.campushub.R
+import br.com.uri.campushub.databinding.ActivityRegisterBinding
 import br.com.uri.campushub.student.HomeActivity
 import br.com.uri.campushub.viewmodel.RegisterState
 import br.com.uri.campushub.viewmodel.RegisterViewModel
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 
 class RegisterActivity : AppCompatActivity() {
 
-    private lateinit var layoutName: TextInputLayout
-    private lateinit var layoutEmail: TextInputLayout
-    private lateinit var layoutStudentId: TextInputLayout
-    private lateinit var layoutCourse: TextInputLayout
-    private lateinit var layoutPassword: TextInputLayout
-    private lateinit var layoutConfirmPassword: TextInputLayout
-
-    private lateinit var inputName: TextInputEditText
-    private lateinit var inputEmail: TextInputEditText
-    private lateinit var inputStudentId: TextInputEditText
-    private lateinit var inputCourse: TextInputEditText
-    private lateinit var inputPassword: TextInputEditText
-    private lateinit var inputConfirmPassword: TextInputEditText
-
-    private lateinit var buttonRegister: MaterialButton
-    private lateinit var progressRegister: ProgressBar
-
+    private lateinit var binding: ActivityRegisterBinding
     private lateinit var viewModel: RegisterViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_register)
+        binding = ActivityRegisterBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        bindViews()
         setupViewModel()
         setupListeners()
         observeRegisterState()
-    }
-
-    private fun bindViews() {
-        layoutName = findViewById(R.id.layoutName)
-        layoutEmail = findViewById(R.id.layoutEmail)
-        layoutStudentId = findViewById(R.id.layoutStudentId)
-        layoutCourse = findViewById(R.id.layoutCourse)
-        layoutPassword = findViewById(R.id.layoutPassword)
-        layoutConfirmPassword = findViewById(R.id.layoutConfirmPassword)
-
-        inputName = findViewById(R.id.inputName)
-        inputEmail = findViewById(R.id.inputEmail)
-        inputStudentId = findViewById(R.id.inputStudentId)
-        inputCourse = findViewById(R.id.inputCourse)
-        inputPassword = findViewById(R.id.inputPassword)
-        inputConfirmPassword = findViewById(R.id.inputConfirmPassword)
-
-        buttonRegister = findViewById(R.id.buttonRegister)
-        progressRegister = findViewById(R.id.progressRegister)
     }
 
     private fun setupViewModel() {
@@ -72,11 +32,11 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        buttonRegister.setOnClickListener {
+        binding.buttonRegister.setOnClickListener {
             attemptRegistration()
         }
 
-        findViewById<TextView>(R.id.textLogin).setOnClickListener {
+        binding.textLogin.setOnClickListener {
             val intent = Intent(this, LoginActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
@@ -110,51 +70,51 @@ class RegisterActivity : AppCompatActivity() {
     private fun attemptRegistration() {
         clearErrors()
 
-        val name = inputName.text?.toString()?.trim().orEmpty()
-        val email = inputEmail.text?.toString()?.trim().orEmpty()
-        val studentId = inputStudentId.text?.toString()?.trim().orEmpty()
-        val course = inputCourse.text?.toString()?.trim().orEmpty()
-        val password = inputPassword.text?.toString().orEmpty()
-        val confirmPassword = inputConfirmPassword.text?.toString().orEmpty()
+        val name = binding.inputName.text?.toString()?.trim().orEmpty()
+        val email = binding.inputEmail.text?.toString()?.trim().orEmpty()
+        val studentId = binding.inputStudentId.text?.toString()?.trim().orEmpty()
+        val course = binding.inputCourse.text?.toString()?.trim().orEmpty()
+        val password = binding.inputPassword.text?.toString().orEmpty()
+        val confirmPassword = binding.inputConfirmPassword.text?.toString().orEmpty()
 
         var isValid = true
 
         if (name.isBlank()) {
-            layoutName.error = "Informe seu nome completo."
+            binding.layoutName.error = "Informe seu nome completo."
             isValid = false
         }
 
         if (email.isBlank()) {
-            layoutEmail.error = "Informe seu e-mail."
+            binding.layoutEmail.error = "Informe seu e-mail."
             isValid = false
         } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            layoutEmail.error = "Informe um e-mail válido."
+            binding.layoutEmail.error = "Informe um e-mail válido."
             isValid = false
         }
 
         if (studentId.isBlank()) {
-            layoutStudentId.error = "Informe sua matrícula."
+            binding.layoutStudentId.error = "Informe sua matrícula."
             isValid = false
         }
 
         if (course.isBlank()) {
-            layoutCourse.error = "Informe seu curso."
+            binding.layoutCourse.error = "Informe seu curso."
             isValid = false
         }
 
         if (password.isBlank()) {
-            layoutPassword.error = "Informe uma senha."
+            binding.layoutPassword.error = "Informe uma senha."
             isValid = false
         } else if (password.length < 6) {
-            layoutPassword.error = "A senha deve ter pelo menos 6 caracteres."
+            binding.layoutPassword.error = "A senha deve ter pelo menos 6 caracteres."
             isValid = false
         }
 
         if (confirmPassword.isBlank()) {
-            layoutConfirmPassword.error = "Confirme sua senha."
+            binding.layoutConfirmPassword.error = "Confirme sua senha."
             isValid = false
         } else if (confirmPassword != password) {
-            layoutConfirmPassword.error = "As senhas não coincidem."
+            binding.layoutConfirmPassword.error = "As senhas não coincidem."
             isValid = false
         }
 
@@ -172,14 +132,14 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun setLoading(isLoading: Boolean) {
-        progressRegister.visibility = if (isLoading) View.VISIBLE else View.GONE
-        buttonRegister.isEnabled = !isLoading
-        inputName.isEnabled = !isLoading
-        inputEmail.isEnabled = !isLoading
-        inputStudentId.isEnabled = !isLoading
-        inputCourse.isEnabled = !isLoading
-        inputPassword.isEnabled = !isLoading
-        inputConfirmPassword.isEnabled = !isLoading
+        binding.progressRegister.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.buttonRegister.isEnabled = !isLoading
+        binding.inputName.isEnabled = !isLoading
+        binding.inputEmail.isEnabled = !isLoading
+        binding.inputStudentId.isEnabled = !isLoading
+        binding.inputCourse.isEnabled = !isLoading
+        binding.inputPassword.isEnabled = !isLoading
+        binding.inputConfirmPassword.isEnabled = !isLoading
     }
 
     private fun navigateToHome() {
@@ -190,11 +150,11 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun clearErrors() {
-        layoutName.error = null
-        layoutEmail.error = null
-        layoutStudentId.error = null
-        layoutCourse.error = null
-        layoutPassword.error = null
-        layoutConfirmPassword.error = null
+        binding.layoutName.error = null
+        binding.layoutEmail.error = null
+        binding.layoutStudentId.error = null
+        binding.layoutCourse.error = null
+        binding.layoutPassword.error = null
+        binding.layoutConfirmPassword.error = null
     }
 }
