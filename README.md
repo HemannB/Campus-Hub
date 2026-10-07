@@ -29,9 +29,17 @@ Neste momento, estão implementados:
 - listagem e detalhes de eventos;
 - inscrição e cancelamento com controle de vagas;
 - tela **Meus Eventos**;
+- possibilidade de favoritar e desfavoritar eventos;
+- tela **Meus Favoritos**;
+- comentários com autor e data;
+- edição e exclusão dos próprios comentários;
+- busca de eventos pelo título;
+- filtros por categoria e por situação, entre próximos e encerrados;
 - estados de carregamento, lista vazia e erro.
 
-A próxima etapa proposta para a disciplina ainda está pendente: favoritos, comentários, avaliações e busca/filtros de eventos.
+Da etapa de expansão proposta para a disciplina, ainda está pendente o bloco de
+avaliações: alunos inscritos poderão avaliar eventos encerrados com uma nota de
+1 a 5, alterar a própria nota e consultar a média das avaliações no evento.
 
 ## Tecnologias
 
