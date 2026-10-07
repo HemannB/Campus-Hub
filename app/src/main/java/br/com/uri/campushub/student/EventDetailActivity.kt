@@ -5,14 +5,20 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.uri.campushub.databinding.ActivityEventDetailBinding
+import br.com.uri.campushub.model.Comment
 import br.com.uri.campushub.model.Event
+import br.com.uri.campushub.viewmodel.CommentActionState
+import br.com.uri.campushub.viewmodel.CommentListState
+import br.com.uri.campushub.viewmodel.CommentViewModel
 import br.com.uri.campushub.viewmodel.EventDetailState
 import br.com.uri.campushub.viewmodel.EventDetailViewModel
 import br.com.uri.campushub.viewmodel.FavoriteState
 import br.com.uri.campushub.viewmodel.FavoriteViewModel
 import br.com.uri.campushub.viewmodel.RegistrationState
 import br.com.uri.campushub.viewmodel.RegistrationViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -27,7 +33,10 @@ class EventDetailActivity : AppCompatActivity() {
     private lateinit var eventDetailViewModel: EventDetailViewModel
     private lateinit var registrationViewModel: RegistrationViewModel
     private lateinit var favoriteViewModel: FavoriteViewModel
+    private lateinit var commentViewModel: CommentViewModel
+    private lateinit var commentAdapter: CommentAdapter
     private lateinit var eventId: String
+    private var editingCommentId: String? = null
     private var currentEvent: Event? = null
     private var currentRegistrationStatus: Boolean? = null
 
@@ -39,10 +48,13 @@ class EventDetailActivity : AppCompatActivity() {
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
 
         setupViewModel()
+        setupCommentRecyclerView()
         setupListeners()
         observeEventDetailState()
         observeRegistrationState()
         observeFavoriteState()
+        observeCommentListState()
+        observeCommentActionState()
 
         if (eventId.isBlank()) {
             showError("Evento inválido.")
@@ -50,6 +62,7 @@ class EventDetailActivity : AppCompatActivity() {
             eventDetailViewModel.loadEvent(eventId)
             registrationViewModel.loadStatus(eventId)
             favoriteViewModel.loadStatus(eventId)
+            commentViewModel.loadComments(eventId)
         }
     }
 
@@ -57,6 +70,17 @@ class EventDetailActivity : AppCompatActivity() {
         eventDetailViewModel = ViewModelProvider(this)[EventDetailViewModel::class.java]
         registrationViewModel = ViewModelProvider(this)[RegistrationViewModel::class.java]
         favoriteViewModel = ViewModelProvider(this)[FavoriteViewModel::class.java]
+        commentViewModel = ViewModelProvider(this)[CommentViewModel::class.java]
+    }
+
+    private fun setupCommentRecyclerView() {
+        commentAdapter = CommentAdapter(
+            currentUserId = commentViewModel.currentUserId(),
+            onEditComment = ::startEditingComment,
+            onDeleteComment = ::confirmCommentDeletion
+        )
+        binding.recyclerComments.layoutManager = LinearLayoutManager(this)
+        binding.recyclerComments.adapter = commentAdapter
     }
 
     private fun setupListeners() {
@@ -73,6 +97,7 @@ class EventDetailActivity : AppCompatActivity() {
                 eventDetailViewModel.loadEvent(eventId)
                 registrationViewModel.loadStatus(eventId)
                 favoriteViewModel.loadStatus(eventId)
+                commentViewModel.loadComments(eventId)
             }
         }
 
@@ -82,6 +107,14 @@ class EventDetailActivity : AppCompatActivity() {
 
         binding.buttonFavorite.setOnClickListener {
             favoriteViewModel.toggleFavorite(eventId)
+        }
+
+        binding.buttonSubmitComment.setOnClickListener {
+            submitComment()
+        }
+
+        binding.buttonCancelCommentEdit.setOnClickListener {
+            resetCommentEditor()
         }
     }
 
@@ -155,6 +188,121 @@ class EventDetailActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun observeCommentListState() {
+        commentViewModel.commentListState.observe(this) { state ->
+            when (state) {
+                CommentListState.Idle -> showCommentsLoading(false)
+                CommentListState.Loading -> showCommentsLoading(true)
+                is CommentListState.Success -> showComments(state.comments)
+                is CommentListState.Error -> showCommentsError(state.message)
+            }
+        }
+    }
+
+    private fun observeCommentActionState() {
+        commentViewModel.commentActionState.observe(this) { state ->
+            when (state) {
+                CommentActionState.Idle -> setCommentActionLoading(false)
+                CommentActionState.Loading -> setCommentActionLoading(true)
+                is CommentActionState.Success -> {
+                    setCommentActionLoading(false)
+                    resetCommentEditor()
+                    Toast.makeText(this, state.message, Toast.LENGTH_SHORT).show()
+                    commentViewModel.clearActionState()
+                }
+                is CommentActionState.Error -> {
+                    setCommentActionLoading(false)
+                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                    commentViewModel.clearActionState()
+                }
+            }
+        }
+    }
+
+    private fun showCommentsLoading(isLoading: Boolean) {
+        binding.progressComments.visibility = if (isLoading) View.VISIBLE else View.GONE
+
+        if (isLoading) {
+            binding.recyclerComments.visibility = View.GONE
+            binding.textCommentsMessage.visibility = View.GONE
+        }
+    }
+
+    private fun showComments(comments: List<Comment>) {
+        showCommentsLoading(false)
+        commentAdapter.submitList(comments)
+
+        if (comments.isEmpty()) {
+            binding.recyclerComments.visibility = View.GONE
+            binding.textCommentsMessage.visibility = View.VISIBLE
+            binding.textCommentsMessage.text = "Nenhum comentário publicado."
+        } else {
+            binding.recyclerComments.visibility = View.VISIBLE
+            binding.textCommentsMessage.visibility = View.GONE
+        }
+    }
+
+    private fun showCommentsError(message: String) {
+        showCommentsLoading(false)
+        binding.recyclerComments.visibility = View.GONE
+        binding.textCommentsMessage.visibility = View.VISIBLE
+        binding.textCommentsMessage.text = message
+    }
+
+    private fun submitComment() {
+        binding.layoutCommentInput.error = null
+
+        val text = binding.inputComment.text?.toString()?.trim().orEmpty()
+
+        if (text.isBlank()) {
+            binding.layoutCommentInput.error = "Escreva um comentário."
+            return
+        }
+
+        val commentId = editingCommentId
+
+        if (commentId == null) {
+            commentViewModel.createComment(eventId, text)
+        } else {
+            commentViewModel.updateComment(eventId, commentId, text)
+        }
+    }
+
+    private fun startEditingComment(comment: Comment) {
+        editingCommentId = comment.id
+        binding.layoutCommentInput.error = null
+        binding.inputComment.setText(comment.text)
+        binding.inputComment.setSelection(comment.text.length)
+        binding.buttonSubmitComment.text = "Salvar alteração"
+        binding.buttonCancelCommentEdit.visibility = View.VISIBLE
+        binding.inputComment.requestFocus()
+    }
+
+    private fun resetCommentEditor() {
+        editingCommentId = null
+        binding.layoutCommentInput.error = null
+        binding.inputComment.text?.clear()
+        binding.buttonSubmitComment.text = "Publicar comentário"
+        binding.buttonCancelCommentEdit.visibility = View.GONE
+    }
+
+    private fun confirmCommentDeletion(comment: Comment) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Excluir comentário?")
+            .setMessage("Esta ação não poderá ser desfeita.")
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Excluir") { _, _ ->
+                commentViewModel.deleteComment(eventId, comment.id)
+            }
+            .show()
+    }
+
+    private fun setCommentActionLoading(isLoading: Boolean) {
+        binding.buttonSubmitComment.isEnabled = !isLoading
+        binding.buttonCancelCommentEdit.isEnabled = !isLoading
+        binding.inputComment.isEnabled = !isLoading
     }
 
     private fun showLoading(isLoading: Boolean) {
