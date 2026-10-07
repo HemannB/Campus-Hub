@@ -63,4 +63,30 @@ class FavoriteRepository(
                 }
             }
     }
+
+    fun unfavorite(
+        eventId: String,
+        onResult: (Result<Unit>) -> Unit
+    ) {
+        val userId = auth.currentUser?.uid
+
+        if (userId == null) {
+            onResult(Result.failure(Exception("Usuário não autenticado.")))
+            return
+        }
+
+        firestore.collection("favorites")
+            .document("${userId}_$eventId")
+            .delete()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onResult(Result.success(Unit))
+                } else {
+                    val exception = task.exception
+                        ?: Exception("Não foi possível remover o favorito.")
+
+                    onResult(Result.failure(exception))
+                }
+            }
+    }
 }
