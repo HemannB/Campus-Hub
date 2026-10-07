@@ -1,0 +1,125 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function registrationPath(eventId) {
+      return /databases/$(database)/documents/registrations/$(request.auth.uid + "_" + eventId);
+    }
+
+    function eventPath(eventId) {
+      return /databases/$(database)/documents/events/$(eventId);
+    }
+
+    match /users/{userId} {
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role == "STUDENT";
+
+      allow read: if signedIn()
+        && request.auth.uid == userId;
+
+      allow update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.role == resource.data.role;
+    }
+
+    match /events/{eventId} {
+      allow read: if signedIn();
+
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly(["participantCount"])
+        && request.resource.data.participantCount is int
+        && (
+          (
+            !exists(registrationPath(eventId))
+            && existsAfter(registrationPath(eventId))
+            && request.resource.data.participantCount
+              == resource.data.participantCount + 1
+            && (
+              resource.data.maxParticipants == 0
+              || request.resource.data.participantCount
+                <= resource.data.maxParticipants
+            )
+          )
+          ||
+          (
+            exists(registrationPath(eventId))
+            && !existsAfter(registrationPath(eventId))
+            && request.resource.data.participantCount
+              == resource.data.participantCount - 1
+            && request.resource.data.participantCount >= 0
+          )
+        );
+    }
+
+    match /registrations/{registrationId} {
+      allow get: if signedIn()
+        && registrationId.matches(request.auth.uid + "_.*");
+
+      allow list: if signedIn()
+        && resource.data.userId == request.auth.uid;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasAll([
+          "userId", "eventId", "registeredAt"
+        ])
+        && request.resource.data.keys().hasOnly([
+          "userId", "eventId", "registeredAt"
+        ])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.eventId is string
+        && request.resource.data.registeredAt == request.time
+        && registrationId
+          == request.auth.uid + "_" + request.resource.data.eventId
+        && exists(eventPath(request.resource.data.eventId))
+        && getAfter(eventPath(request.resource.data.eventId))
+             .data.participantCount
+          == get(eventPath(request.resource.data.eventId))
+             .data.participantCount + 1;
+
+      allow delete: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && registrationId
+          == request.auth.uid + "_" + resource.data.eventId
+        && exists(eventPath(resource.data.eventId))
+        && getAfter(eventPath(resource.data.eventId))
+             .data.participantCount
+          == get(eventPath(resource.data.eventId))
+             .data.participantCount - 1;
+    }
+
+    match /favorites/{favoriteId} {
+      allow get: if signedIn()
+        && favoriteId.matches(request.auth.uid + "_.*");
+
+      allow list: if signedIn()
+        && resource.data.userId == request.auth.uid;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasAll([
+          "userId", "eventId", "createdAt"
+        ])
+        && request.resource.data.keys().hasOnly([
+          "userId", "eventId", "createdAt"
+        ])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.eventId is string
+        && request.resource.data.createdAt == request.time
+        && favoriteId
+          == request.auth.uid + "_" + request.resource.data.eventId
+        && exists(eventPath(request.resource.data.eventId));
+
+      allow delete: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && favoriteId
+          == request.auth.uid + "_" + resource.data.eventId;
+    }
+  }
+}
