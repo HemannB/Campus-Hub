@@ -41,11 +41,70 @@
             android:textColor="#667085"
             android:textSize="16sp" />
 
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutSearchEvents"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:hint="Buscar por título"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/inputSearchEvents"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:maxLines="1"
+                android:singleLine="true" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonCategoryFilter"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Categoria: todas"
+                android:textAllCaps="false"
+                android:textColor="#1557D6"
+                app:cornerRadius="16dp"
+                app:strokeColor="#B8C8E8" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonSituationFilter"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Situação: todas"
+                android:textAllCaps="false"
+                android:textColor="#1557D6"
+                app:cornerRadius="16dp"
+                app:strokeColor="#B8C8E8" />
+
+        </LinearLayout>
+
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="20dp">
+            android:layout_marginTop="14dp">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerEvents"
