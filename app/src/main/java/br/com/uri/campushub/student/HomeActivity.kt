@@ -66,6 +66,11 @@ class HomeActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        binding.buttonMyFavorites.setOnClickListener {
+            val intent = Intent(this, MyFavoritesActivity::class.java)
+            startActivity(intent)
+        }
+
         binding.buttonProfile.setOnClickListener {
             val intent = Intent(this, ProfileActivity::class.java)
             startActivity(intent)
