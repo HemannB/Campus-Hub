@@ -8,6 +8,38 @@ class FavoriteRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
+    fun getFavoriteEventIds(
+        onResult: (Result<Set<String>>) -> Unit
+    ) {
+        val userId = auth.currentUser?.uid
+
+        if (userId == null) {
+            onResult(Result.failure(Exception("Usuário não autenticado.")))
+            return
+        }
+
+        firestore.collection("favorites")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val eventIds = task.result
+                        ?.documents
+                        ?.mapNotNull { document ->
+                            document.getString("eventId")
+                        }
+                        ?.toSet()
+                        .orEmpty()
+
+                    onResult(Result.success(eventIds))
+                } else {
+                    val exception = task.exception
+                        ?: Exception("Não foi possível carregar seus favoritos.")
+                    onResult(Result.failure(exception))
+                }
+            }
+    }
+
     fun getFavoriteStatus(
         eventId: String,
         onResult: (Result<Boolean>) -> Unit
