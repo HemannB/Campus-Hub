@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.uri.campushub.MainActivity
@@ -11,7 +12,9 @@ import br.com.uri.campushub.databinding.ActivityHomeBinding
 import br.com.uri.campushub.model.Event
 import br.com.uri.campushub.viewmodel.AuthViewModel
 import br.com.uri.campushub.viewmodel.EventState
+import br.com.uri.campushub.viewmodel.EventSituationFilter
 import br.com.uri.campushub.viewmodel.EventViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class HomeActivity : AppCompatActivity() {
 
@@ -19,6 +22,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var authViewModel: AuthViewModel
     private lateinit var eventViewModel: EventViewModel
     private lateinit var eventAdapter: EventAdapter
+    private var availableCategories: List<String> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +32,7 @@ class HomeActivity : AppCompatActivity() {
         setupRecyclerView()
         setupViewModels()
         observeEventState()
+        observeCategories()
         buttonListeners()
     }
 
@@ -54,13 +59,34 @@ class HomeActivity : AppCompatActivity() {
             when (state) {
                 EventState.Idle -> showLoading(false)
                 EventState.Loading -> showLoading(true)
-                is EventState.Success -> showEvents(state.events)
+                is EventState.Success -> showEvents(state.events, state.isFiltered)
                 is EventState.Error -> showMessage(state.message, canRetry = true)
             }
         }
     }
 
+    private fun observeCategories() {
+        eventViewModel.categories.observe(this) { categories ->
+            availableCategories = categories
+            updateCategoryFilterButton(eventViewModel.categoryFilter)
+        }
+    }
+
     private fun buttonListeners() {
+        binding.inputSearchEvents.doAfterTextChanged { text ->
+            eventViewModel.setSearchQuery(text?.toString().orEmpty())
+        }
+
+        binding.buttonCategoryFilter.setOnClickListener {
+            showCategoryFilterDialog()
+        }
+
+        binding.buttonSituationFilter.setOnClickListener {
+            showSituationFilterDialog()
+        }
+
+        updateSituationFilterButton(eventViewModel.situationFilter)
+
         binding.buttonMyEvents.setOnClickListener {
             val intent = Intent(this, MyEventsActivity::class.java)
             startActivity(intent)
@@ -86,6 +112,65 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
+    private fun showCategoryFilterDialog() {
+        val allCategoriesLabel = "Todas as categorias"
+        val options = listOf(allCategoriesLabel) + availableCategories
+        val selectedIndex = eventViewModel.categoryFilter
+            ?.let(options::indexOf)
+            ?.takeIf { index -> index >= 0 }
+            ?: 0
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Filtrar por categoria")
+            .setSingleChoiceItems(options.toTypedArray(), selectedIndex) { dialog, index ->
+                val category = options[index].takeUnless { index == 0 }
+                eventViewModel.setCategory(category)
+                updateCategoryFilterButton(category)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun showSituationFilterDialog() {
+        val options = arrayOf("Todos os eventos", "Próximos", "Encerrados")
+        val selectedIndex = when (eventViewModel.situationFilter) {
+            EventSituationFilter.ALL -> 0
+            EventSituationFilter.UPCOMING -> 1
+            EventSituationFilter.FINISHED -> 2
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Filtrar por situação")
+            .setSingleChoiceItems(options, selectedIndex) { dialog, index ->
+                val situation = when (index) {
+                    1 -> EventSituationFilter.UPCOMING
+                    2 -> EventSituationFilter.FINISHED
+                    else -> EventSituationFilter.ALL
+                }
+
+                eventViewModel.setSituation(situation)
+                updateSituationFilterButton(situation)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun updateCategoryFilterButton(category: String?) {
+        binding.buttonCategoryFilter.text = category
+            ?.let { selectedCategory -> "Categoria: $selectedCategory" }
+            ?: "Categoria: todas"
+    }
+
+    private fun updateSituationFilterButton(situation: EventSituationFilter) {
+        binding.buttonSituationFilter.text = when (situation) {
+            EventSituationFilter.ALL -> "Situação: todas"
+            EventSituationFilter.UPCOMING -> "Situação: próximos"
+            EventSituationFilter.FINISHED -> "Situação: encerrados"
+        }
+    }
+
     private fun showLoading(isLoading: Boolean) {
         binding.progressEvents.visibility = if (isLoading) View.VISIBLE else View.GONE
 
@@ -95,11 +180,16 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun showEvents(events: List<Event>) {
+    private fun showEvents(events: List<Event>, isFiltered: Boolean) {
         showLoading(false)
 
         if (events.isEmpty()) {
-            showMessage("Nenhum evento disponível no momento.", canRetry = false)
+            val message = if (isFiltered) {
+                "Nenhum evento corresponde à busca e aos filtros."
+            } else {
+                "Nenhum evento disponível no momento."
+            }
+            showMessage(message, canRetry = false)
             return
         }
 

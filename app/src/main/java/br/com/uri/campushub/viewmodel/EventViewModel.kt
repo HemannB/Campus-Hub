@@ -32,6 +32,12 @@ class EventViewModel : ViewModel() {
     private var selectedSituation = EventSituationFilter.ALL
     private var hasLoadedEvents = false
 
+    val categoryFilter: String?
+        get() = selectedCategory
+
+    val situationFilter: EventSituationFilter
+        get() = selectedSituation
+
     private val _eventState = MutableLiveData<EventState>(EventState.Idle)
     val eventState: LiveData<EventState> = _eventState
 
