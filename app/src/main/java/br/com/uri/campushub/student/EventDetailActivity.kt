@@ -9,6 +9,8 @@ import br.com.uri.campushub.databinding.ActivityEventDetailBinding
 import br.com.uri.campushub.model.Event
 import br.com.uri.campushub.viewmodel.EventDetailState
 import br.com.uri.campushub.viewmodel.EventDetailViewModel
+import br.com.uri.campushub.viewmodel.FavoriteState
+import br.com.uri.campushub.viewmodel.FavoriteViewModel
 import br.com.uri.campushub.viewmodel.RegistrationState
 import br.com.uri.campushub.viewmodel.RegistrationViewModel
 import com.google.firebase.Timestamp
@@ -24,6 +26,7 @@ class EventDetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEventDetailBinding
     private lateinit var eventDetailViewModel: EventDetailViewModel
     private lateinit var registrationViewModel: RegistrationViewModel
+    private lateinit var favoriteViewModel: FavoriteViewModel
     private lateinit var eventId: String
     private var currentEvent: Event? = null
     private var currentRegistrationStatus: Boolean? = null
@@ -39,18 +42,21 @@ class EventDetailActivity : AppCompatActivity() {
         setupListeners()
         observeEventDetailState()
         observeRegistrationState()
+        observeFavoriteState()
 
         if (eventId.isBlank()) {
             showError("Evento inválido.")
         } else {
             eventDetailViewModel.loadEvent(eventId)
             registrationViewModel.loadStatus(eventId)
+            favoriteViewModel.loadStatus(eventId)
         }
     }
 
     private fun setupViewModel() {
         eventDetailViewModel = ViewModelProvider(this)[EventDetailViewModel::class.java]
         registrationViewModel = ViewModelProvider(this)[RegistrationViewModel::class.java]
+        favoriteViewModel = ViewModelProvider(this)[FavoriteViewModel::class.java]
     }
 
     private fun setupListeners() {
@@ -66,11 +72,16 @@ class EventDetailActivity : AppCompatActivity() {
             if (eventId.isNotBlank()) {
                 eventDetailViewModel.loadEvent(eventId)
                 registrationViewModel.loadStatus(eventId)
+                favoriteViewModel.loadStatus(eventId)
             }
         }
 
         binding.buttonRegistration.setOnClickListener {
             registrationViewModel.toggleRegistration(eventId)
+        }
+
+        binding.buttonFavorite.setOnClickListener {
+            favoriteViewModel.toggleFavorite(eventId)
         }
     }
 
@@ -110,6 +121,36 @@ class EventDetailActivity : AppCompatActivity() {
                 is RegistrationState.Error -> {
                     state.isRegistered?.let(::renderRegistrationButton)
                         ?: run { binding.buttonRegistration.visibility = View.GONE }
+                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun observeFavoriteState() {
+        favoriteViewModel.favoriteState.observe(this) { state ->
+            when (state) {
+                FavoriteState.Idle,
+                FavoriteState.Loading -> {
+                    binding.buttonFavorite.visibility = View.GONE
+                }
+
+                is FavoriteState.Status -> {
+                    renderFavoriteButton(state.isFavorite)
+                }
+
+                is FavoriteState.Updating -> {
+                    showFavoriteLoading(state.isFavorite)
+                }
+
+                is FavoriteState.Success -> {
+                    renderFavoriteButton(state.isFavorite)
+                    Toast.makeText(this, state.message, Toast.LENGTH_SHORT).show()
+                }
+
+                is FavoriteState.Error -> {
+                    state.isFavorite?.let(::renderFavoriteButton)
+                        ?: run { binding.buttonFavorite.visibility = View.GONE }
                     Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
                 }
             }
@@ -173,6 +214,26 @@ class EventDetailActivity : AppCompatActivity() {
             "Cancelando inscrição..."
         } else {
             "Realizando inscrição..."
+        }
+    }
+
+    private fun renderFavoriteButton(isFavorite: Boolean) {
+        binding.buttonFavorite.visibility = View.VISIBLE
+        binding.buttonFavorite.isEnabled = true
+        binding.buttonFavorite.text = if (isFavorite) {
+            "Remover dos favoritos"
+        } else {
+            "Favoritar evento"
+        }
+    }
+
+    private fun showFavoriteLoading(isFavorite: Boolean) {
+        binding.buttonFavorite.visibility = View.VISIBLE
+        binding.buttonFavorite.isEnabled = false
+        binding.buttonFavorite.text = if (isFavorite) {
+            "Removendo dos favoritos..."
+        } else {
+            "Favoritando evento..."
         }
     }
 
