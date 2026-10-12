@@ -36,7 +36,8 @@
 
         <activity
             android:name=".student.HomeActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.CampusHUB.Home" />
 
         <activity
             android:name=".auth.RegisterActivity"
