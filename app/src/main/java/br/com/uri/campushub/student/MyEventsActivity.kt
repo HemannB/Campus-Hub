@@ -4,6 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.uri.campushub.databinding.ActivityMyEventsBinding
@@ -21,11 +24,25 @@ class MyEventsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMyEventsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setupSystemBarInsets()
 
         setupRecyclerView()
         setupViewModel()
         setupListeners()
         observeEventState()
+    }
+
+    private fun setupSystemBarInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            binding.root.updatePadding(
+                top = systemBars.top,
+                bottom = systemBars.bottom
+            )
+
+            insets
+        }
     }
 
     override fun onResume() {

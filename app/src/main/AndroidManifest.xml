@@ -20,7 +20,8 @@
 
         <activity
             android:name=".student.MyEventsActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.CampusHUB.Home" />
 
         <activity
             android:name=".student.MyFavoritesActivity"
