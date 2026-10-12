@@ -1,5 +1,7 @@
 package br.com.uri.campushub.student
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -39,21 +41,33 @@ class EventAdapter(
 
         fun bind(event: Event, onEventClick: (Event) -> Unit) {
             binding.textEventCategory.text = event.category.ifBlank { "Evento" }
+            applyCategoryStyle(event.category)
+            binding.imageEvent.setImageResource(eventImage(event.category))
+            binding.imageEvent.contentDescription = "Imagem do evento ${event.title}"
             binding.textEventTitle.text = event.title
+            binding.textEventDescription.text = event.description.ifBlank {
+                "Confira os detalhes e participe deste evento."
+            }
             binding.textEventDate.text = formatDate(event)
             binding.textEventLocation.text = event.location.ifBlank { "Local a definir" }
             binding.textEventParticipants.text = formatParticipants(event)
             binding.root.setOnClickListener { onEventClick(event) }
+            binding.textViewDetails.setOnClickListener { onEventClick(event) }
         }
 
         private fun formatDate(event: Event): String {
             val startDate = event.startAt?.toDate() ?: return "Data a definir"
-            val formatter = SimpleDateFormat(
-                "dd/MM/yyyy 'às' HH:mm",
-                Locale.forLanguageTag("pt-BR")
-            )
+            val locale = Locale.forLanguageTag("pt-BR")
+            val dateFormatter = SimpleDateFormat("dd/MM/yyyy", locale)
+            val timeFormatter = SimpleDateFormat("HH:mm", locale)
+            val start = "${dateFormatter.format(startDate)} • ${timeFormatter.format(startDate)}"
+            val endDate = event.endAt?.toDate() ?: return start
 
-            return formatter.format(startDate)
+            return if (dateFormatter.format(startDate) == dateFormatter.format(endDate)) {
+                "$start–${timeFormatter.format(endDate)}"
+            } else {
+                start
+            }
         }
 
         private fun formatParticipants(event: Event): String {
@@ -62,6 +76,52 @@ class EventAdapter(
             } else {
                 "${event.participantCount} inscritos"
             }
+        }
+
+        private fun eventImage(category: String): Int {
+            return when {
+                category.contains("carreira", ignoreCase = true) ||
+                    category.contains("career", ignoreCase = true) ->
+                    br.com.uri.campushub.R.drawable.event_default_career
+
+                category.contains("cultura", ignoreCase = true) ||
+                    category.contains("música", ignoreCase = true) ||
+                    category.contains("musica", ignoreCase = true) ->
+                    br.com.uri.campushub.R.drawable.event_default_culture
+
+                category.contains("esporte", ignoreCase = true) ||
+                    category.contains("sport", ignoreCase = true) ->
+                    br.com.uri.campushub.R.drawable.event_default_sports
+
+                else -> br.com.uri.campushub.R.drawable.event_default_technology
+            }
+        }
+
+        private fun applyCategoryStyle(category: String) {
+            val (backgroundColor, textColor) = when {
+                category.contains("carreira", ignoreCase = true) ||
+                    category.contains("career", ignoreCase = true) ->
+                    "#DFF7F1" to "#08776D"
+
+                category.contains("cultura", ignoreCase = true) ||
+                    category.contains("música", ignoreCase = true) ||
+                    category.contains("musica", ignoreCase = true) ->
+                    "#F1E8FF" to "#6C2BD9"
+
+                category.contains("esporte", ignoreCase = true) ||
+                    category.contains("sport", ignoreCase = true) ->
+                    "#E5F5E9" to "#237A40"
+
+                category.contains("tecnologia", ignoreCase = true) ||
+                    category.contains("tech", ignoreCase = true) ->
+                    "#E8F0FF" to "#1557D6"
+
+                else -> "#EEF2F8" to "#475467"
+            }
+
+            binding.textEventCategory.backgroundTintList =
+                ColorStateList.valueOf(Color.parseColor(backgroundColor))
+            binding.textEventCategory.setTextColor(Color.parseColor(textColor))
         }
     }
 }
