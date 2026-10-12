@@ -6,44 +6,67 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import br.com.uri.campushub.MainActivity
 import br.com.uri.campushub.databinding.ActivityProfileBinding
 import br.com.uri.campushub.model.User
+import br.com.uri.campushub.viewmodel.AuthViewModel
 import br.com.uri.campushub.viewmodel.ProfileState
 import br.com.uri.campushub.viewmodel.ProfileViewModel
 
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileBinding
-    private lateinit var viewModel: ProfileViewModel
+    private lateinit var profileViewModel: ProfileViewModel
+    private lateinit var authViewModel: AuthViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupViewModel()
+        setupViewModels()
         setupListeners()
         observeProfileState()
     }
 
     override fun onResume() {
         super.onResume()
-        viewModel.loadProfile()
+        profileViewModel.loadProfile()
     }
 
-    private fun setupViewModel() {
-        viewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
+    private fun setupViewModels() {
+        profileViewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
+        authViewModel = ViewModelProvider(this)[AuthViewModel::class.java]
     }
 
     private fun setupListeners() {
+        binding.buttonBackProfile.setOnClickListener {
+            finish()
+        }
+
         binding.buttonEditProfile.setOnClickListener {
             val intent = Intent(this, EditProfileActivity::class.java)
             startActivity(intent)
         }
+
+        binding.buttonMyEvents.setOnClickListener {
+            val intent = Intent(this, MyEventsActivity::class.java)
+            startActivity(intent)
+        }
+
+        binding.buttonMyFavorites.setOnClickListener {
+            val intent = Intent(this, MyFavoritesActivity::class.java)
+            startActivity(intent)
+        }
+
+        binding.buttonLogout.setOnClickListener {
+            authViewModel.logout()
+            navigateToMain()
+        }
     }
 
     private fun observeProfileState() {
-        viewModel.profileState.observe(this) { state ->
+        profileViewModel.profileState.observe(this) { state ->
             when (state) {
                 ProfileState.Idle -> {
                     setLoading(false)
@@ -89,5 +112,12 @@ class ProfileActivity : AppCompatActivity() {
 
         binding.cardProfile.visibility = View.VISIBLE
         binding.buttonEditProfile.visibility = View.VISIBLE
+    }
+
+    private fun navigateToMain() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
     }
 }
