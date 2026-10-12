@@ -2,18 +2,14 @@ package br.com.uri.campushub.student
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import br.com.uri.campushub.R
 import br.com.uri.campushub.databinding.ActivityHomeBinding
 import br.com.uri.campushub.model.Event
 import br.com.uri.campushub.viewmodel.EventState
@@ -33,7 +29,6 @@ class HomeActivity : AppCompatActivity() {
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setupSystemBarInsets()
-        setSupportActionBar(binding.toolbarHome)
 
         setupRecyclerView()
         setupViewModels()
@@ -43,16 +38,13 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupSystemBarInsets() {
-        val toolbarHeight = binding.toolbarHome.layoutParams.height
-
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
 
-            binding.toolbarHome.updateLayoutParams {
-                height = toolbarHeight + systemBars.top
-            }
-            binding.toolbarHome.updatePadding(top = systemBars.top)
-            binding.root.updatePadding(bottom = systemBars.bottom)
+            binding.root.updatePadding(
+                top = systemBars.top,
+                bottom = systemBars.bottom
+            )
 
             insets
         }
@@ -108,24 +100,13 @@ class HomeActivity : AppCompatActivity() {
 
         updateSituationFilterButton(eventViewModel.situationFilter)
 
+        binding.buttonProfile.setOnClickListener {
+            val intent = Intent(this, ProfileActivity::class.java)
+            startActivity(intent)
+        }
+
         binding.buttonRetryEvents.setOnClickListener {
             eventViewModel.loadEvents()
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_home, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.actionProfile -> {
-                val intent = Intent(this, ProfileActivity::class.java)
-                startActivity(intent)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
         }
     }
 
