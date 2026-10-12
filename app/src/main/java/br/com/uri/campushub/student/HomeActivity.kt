@@ -6,6 +6,10 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,6 +32,7 @@ class HomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setupSystemBarInsets()
         setSupportActionBar(binding.toolbarHome)
 
         setupRecyclerView()
@@ -35,6 +40,22 @@ class HomeActivity : AppCompatActivity() {
         observeEventState()
         observeCategories()
         buttonListeners()
+    }
+
+    private fun setupSystemBarInsets() {
+        val toolbarHeight = binding.toolbarHome.layoutParams.height
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            binding.toolbarHome.updateLayoutParams {
+                height = toolbarHeight + systemBars.top
+            }
+            binding.toolbarHome.updatePadding(top = systemBars.top)
+            binding.root.updatePadding(bottom = systemBars.bottom)
+
+            insets
+        }
     }
 
     override fun onResume() {
