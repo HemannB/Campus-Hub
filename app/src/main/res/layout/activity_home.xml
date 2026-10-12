@@ -25,43 +25,13 @@
         android:paddingEnd="28dp"
         android:paddingBottom="24dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Eventos disponíveis"
-                android:textColor="#071A45"
-                android:textSize="28sp"
-                android:textStyle="bold" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonProfile"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="12dp"
-                android:contentDescription="Abrir perfil"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:minWidth="0dp"
-                android:padding="0dp"
-                android:text=""
-                app:backgroundTint="#F5F8FF"
-                app:cornerRadius="24dp"
-                app:icon="@drawable/ic_person_24"
-                app:iconGravity="textStart"
-                app:iconPadding="0dp"
-                app:iconSize="24dp"
-                app:strokeColor="#B8C8E8"
-                app:strokeWidth="1dp" />
-
-        </LinearLayout>
+            android:text="Eventos disponíveis"
+            android:textColor="#071A45"
+            android:textSize="28sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="match_parent"
