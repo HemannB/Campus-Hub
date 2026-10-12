@@ -15,12 +15,15 @@ import br.com.uri.campushub.model.Event
 import br.com.uri.campushub.viewmodel.EventState
 import br.com.uri.campushub.viewmodel.EventSituationFilter
 import br.com.uri.campushub.viewmodel.EventViewModel
+import br.com.uri.campushub.viewmodel.ProfileState
+import br.com.uri.campushub.viewmodel.ProfileViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHomeBinding
     private lateinit var eventViewModel: EventViewModel
+    private lateinit var profileViewModel: ProfileViewModel
     private lateinit var eventAdapter: EventAdapter
     private var availableCategories: List<String> = emptyList()
 
@@ -34,6 +37,7 @@ class HomeActivity : AppCompatActivity() {
         setupViewModels()
         observeEventState()
         observeCategories()
+        observeProfileState()
         buttonListeners()
     }
 
@@ -53,6 +57,7 @@ class HomeActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         eventViewModel.loadEvents()
+        profileViewModel.loadProfile()
     }
 
     private fun setupRecyclerView() {
@@ -65,6 +70,7 @@ class HomeActivity : AppCompatActivity() {
 
     private fun setupViewModels() {
         eventViewModel = ViewModelProvider(this)[EventViewModel::class.java]
+        profileViewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
     }
 
     private fun observeEventState() {
@@ -82,6 +88,26 @@ class HomeActivity : AppCompatActivity() {
         eventViewModel.categories.observe(this) { categories ->
             availableCategories = categories
             updateCategoryFilterButton(eventViewModel.categoryFilter)
+        }
+    }
+
+    private fun observeProfileState() {
+        profileViewModel.profileState.observe(this) { state ->
+            when (state) {
+                is ProfileState.Success -> {
+                    val firstName = state.user.name
+                        .trim()
+                        .substringBefore(" ")
+                        .takeIf { name -> name.isNotBlank() }
+
+                    binding.textGreeting.text = firstName
+                        ?.let { name -> "Olá, $name 👋" }
+                        ?: "Olá! 👋"
+                }
+                is ProfileState.Error -> binding.textGreeting.text = "Olá! 👋"
+                ProfileState.Idle,
+                ProfileState.Loading -> Unit
+            }
         }
     }
 
