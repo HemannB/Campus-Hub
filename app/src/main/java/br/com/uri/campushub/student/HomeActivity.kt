@@ -7,10 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import br.com.uri.campushub.MainActivity
 import br.com.uri.campushub.databinding.ActivityHomeBinding
 import br.com.uri.campushub.model.Event
-import br.com.uri.campushub.viewmodel.AuthViewModel
 import br.com.uri.campushub.viewmodel.EventState
 import br.com.uri.campushub.viewmodel.EventSituationFilter
 import br.com.uri.campushub.viewmodel.EventViewModel
@@ -19,7 +17,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHomeBinding
-    private lateinit var authViewModel: AuthViewModel
     private lateinit var eventViewModel: EventViewModel
     private lateinit var eventAdapter: EventAdapter
     private var availableCategories: List<String> = emptyList()
@@ -50,7 +47,6 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupViewModels() {
-        authViewModel = ViewModelProvider(this)[AuthViewModel::class.java]
         eventViewModel = ViewModelProvider(this)[EventViewModel::class.java]
     }
 
@@ -87,24 +83,9 @@ class HomeActivity : AppCompatActivity() {
 
         updateSituationFilterButton(eventViewModel.situationFilter)
 
-        binding.buttonMyEvents.setOnClickListener {
-            val intent = Intent(this, MyEventsActivity::class.java)
-            startActivity(intent)
-        }
-
-        binding.buttonMyFavorites.setOnClickListener {
-            val intent = Intent(this, MyFavoritesActivity::class.java)
-            startActivity(intent)
-        }
-
         binding.buttonProfile.setOnClickListener {
             val intent = Intent(this, ProfileActivity::class.java)
             startActivity(intent)
-        }
-
-        binding.buttonLogout.setOnClickListener {
-            authViewModel.logout()
-            navigateToMain()
         }
 
         binding.buttonRetryEvents.setOnClickListener {
@@ -213,10 +194,4 @@ class HomeActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun navigateToMain() {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        startActivity(intent)
-    }
 }
