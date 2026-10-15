@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.uri.campushub.databinding.ActivityEventDetailBinding
 import br.com.uri.campushub.model.Comment
 import br.com.uri.campushub.model.Event
+import br.com.uri.campushub.model.RatingSummary
 import br.com.uri.campushub.viewmodel.CommentActionState
 import br.com.uri.campushub.viewmodel.CommentListState
 import br.com.uri.campushub.viewmodel.CommentViewModel
@@ -16,6 +17,9 @@ import br.com.uri.campushub.viewmodel.EventDetailState
 import br.com.uri.campushub.viewmodel.EventDetailViewModel
 import br.com.uri.campushub.viewmodel.FavoriteState
 import br.com.uri.campushub.viewmodel.FavoriteViewModel
+import br.com.uri.campushub.viewmodel.RatingActionState
+import br.com.uri.campushub.viewmodel.RatingSummaryState
+import br.com.uri.campushub.viewmodel.RatingViewModel
 import br.com.uri.campushub.viewmodel.RegistrationState
 import br.com.uri.campushub.viewmodel.RegistrationViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -34,11 +38,16 @@ class EventDetailActivity : AppCompatActivity() {
     private lateinit var registrationViewModel: RegistrationViewModel
     private lateinit var favoriteViewModel: FavoriteViewModel
     private lateinit var commentViewModel: CommentViewModel
+    private lateinit var ratingViewModel: RatingViewModel
     private lateinit var commentAdapter: CommentAdapter
     private lateinit var eventId: String
     private var editingCommentId: String? = null
     private var currentEvent: Event? = null
     private var currentRegistrationStatus: Boolean? = null
+    private var currentRatingSummary = RatingSummary()
+    private var isRatingSummaryLoaded = false
+    private var ratingSummaryError: String? = null
+    private var isRatingActionLoading = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +64,8 @@ class EventDetailActivity : AppCompatActivity() {
         observeFavoriteState()
         observeCommentListState()
         observeCommentActionState()
+        observeRatingSummaryState()
+        observeRatingActionState()
 
         if (eventId.isBlank()) {
             showError("Evento inválido.")
@@ -63,6 +74,7 @@ class EventDetailActivity : AppCompatActivity() {
             registrationViewModel.loadStatus(eventId)
             favoriteViewModel.loadStatus(eventId)
             commentViewModel.loadComments(eventId)
+            ratingViewModel.loadRatingSummary(eventId)
         }
     }
 
@@ -71,6 +83,7 @@ class EventDetailActivity : AppCompatActivity() {
         registrationViewModel = ViewModelProvider(this)[RegistrationViewModel::class.java]
         favoriteViewModel = ViewModelProvider(this)[FavoriteViewModel::class.java]
         commentViewModel = ViewModelProvider(this)[CommentViewModel::class.java]
+        ratingViewModel = ViewModelProvider(this)[RatingViewModel::class.java]
     }
 
     private fun setupCommentRecyclerView() {
@@ -98,6 +111,7 @@ class EventDetailActivity : AppCompatActivity() {
                 registrationViewModel.loadStatus(eventId)
                 favoriteViewModel.loadStatus(eventId)
                 commentViewModel.loadComments(eventId)
+                ratingViewModel.loadRatingSummary(eventId)
             }
         }
 
@@ -115,6 +129,13 @@ class EventDetailActivity : AppCompatActivity() {
 
         binding.buttonCancelCommentEdit.setOnClickListener {
             resetCommentEditor()
+        }
+
+        binding.buttonSaveRating.setOnClickListener {
+            ratingViewModel.saveRating(
+                eventId = eventId,
+                score = binding.ratingBarEvent.rating.toInt()
+            )
         }
     }
 
@@ -134,7 +155,9 @@ class EventDetailActivity : AppCompatActivity() {
             when (state) {
                 RegistrationState.Idle,
                 RegistrationState.Loading -> {
+                    currentRegistrationStatus = null
                     binding.buttonRegistration.visibility = View.GONE
+                    renderRatingAvailability()
                 }
 
                 is RegistrationState.Status -> {
@@ -153,7 +176,11 @@ class EventDetailActivity : AppCompatActivity() {
 
                 is RegistrationState.Error -> {
                     state.isRegistered?.let(::renderRegistrationButton)
-                        ?: run { binding.buttonRegistration.visibility = View.GONE }
+                        ?: run {
+                            currentRegistrationStatus = null
+                            binding.buttonRegistration.visibility = View.GONE
+                            renderRatingAvailability()
+                        }
                     Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
                 }
             }
@@ -216,6 +243,60 @@ class EventDetailActivity : AppCompatActivity() {
                     setCommentActionLoading(false)
                     Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
                     commentViewModel.clearActionState()
+                }
+            }
+        }
+    }
+
+    private fun observeRatingSummaryState() {
+        ratingViewModel.summaryState.observe(this) { state ->
+            when (state) {
+                RatingSummaryState.Idle -> {
+                    showRatingLoading(false)
+                    renderRatingAvailability()
+                }
+
+                RatingSummaryState.Loading -> {
+                    isRatingSummaryLoaded = false
+                    ratingSummaryError = null
+                    showRatingLoading(true)
+                    renderRatingAvailability()
+                }
+
+                is RatingSummaryState.Success -> {
+                    currentRatingSummary = state.summary
+                    isRatingSummaryLoaded = true
+                    ratingSummaryError = null
+                    showRatingLoading(false)
+                    renderRatingSummary(state.summary)
+                    renderRatingAvailability()
+                }
+
+                is RatingSummaryState.Error -> {
+                    isRatingSummaryLoaded = false
+                    ratingSummaryError = state.message
+                    showRatingLoading(false)
+                    renderRatingAvailability()
+                }
+            }
+        }
+    }
+
+    private fun observeRatingActionState() {
+        ratingViewModel.actionState.observe(this) { state ->
+            when (state) {
+                RatingActionState.Idle -> setRatingActionLoading(false)
+                RatingActionState.Loading -> setRatingActionLoading(true)
+                is RatingActionState.Success -> {
+                    setRatingActionLoading(false)
+                    Toast.makeText(this, state.message, Toast.LENGTH_SHORT).show()
+                    ratingViewModel.clearActionState()
+                }
+
+                is RatingActionState.Error -> {
+                    setRatingActionLoading(false)
+                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                    ratingViewModel.clearActionState()
                 }
             }
         }
@@ -305,6 +386,97 @@ class EventDetailActivity : AppCompatActivity() {
         binding.inputComment.isEnabled = !isLoading
     }
 
+    private fun showRatingLoading(isLoading: Boolean) {
+        binding.progressRating.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
+
+    private fun renderRatingSummary(summary: RatingSummary) {
+        if (summary.count == 0) {
+            binding.textRatingAverage.text = "—"
+            binding.textRatingCount.text = "Nenhuma avaliação"
+        } else {
+            binding.textRatingAverage.text = String.format(
+                Locale.forLanguageTag("pt-BR"),
+                "%.1f",
+                summary.average
+            )
+            binding.textRatingCount.text = if (summary.count == 1) {
+                "1 avaliação"
+            } else {
+                "${summary.count} avaliações"
+            }
+        }
+
+        binding.ratingBarEvent.rating = (summary.currentUserScore ?: 0).toFloat()
+        binding.textRatingPrompt.text = if (summary.currentUserScore == null) {
+            "Como foi sua experiência?"
+        } else {
+            "Sua avaliação"
+        }
+        updateRatingButtonText()
+    }
+
+    private fun renderRatingAvailability() {
+        val event = currentEvent
+        val canRate = event != null &&
+            isEventFinished(event) &&
+            currentRegistrationStatus == true &&
+            isRatingSummaryLoaded
+
+        binding.layoutRatingInput.visibility = if (canRate) View.VISIBLE else View.GONE
+
+        val message = when {
+            event == null -> null
+            ratingSummaryError != null -> ratingSummaryError
+            event.endAt == null ->
+                "A avaliação ficará disponível quando o término for informado."
+            !isEventFinished(event) ->
+                "As avaliações serão liberadas depois que o evento terminar."
+            currentRegistrationStatus == null -> "Verificando sua inscrição..."
+            currentRegistrationStatus == false ->
+                "Somente alunos inscritos podem avaliar este evento."
+            !isRatingSummaryLoaded -> "Carregando avaliações..."
+            else -> null
+        }
+
+        binding.textRatingMessage.text = message
+        binding.textRatingMessage.visibility = if (message == null) {
+            View.GONE
+        } else {
+            View.VISIBLE
+        }
+
+        binding.ratingBarEvent.isEnabled = canRate && !isRatingActionLoading
+        binding.buttonSaveRating.isEnabled = canRate && !isRatingActionLoading
+    }
+
+    private fun setRatingActionLoading(isLoading: Boolean) {
+        isRatingActionLoading = isLoading
+        binding.ratingBarEvent.isEnabled = !isLoading
+        binding.buttonSaveRating.isEnabled = !isLoading
+
+        if (isLoading) {
+            binding.buttonSaveRating.text = "Salvando avaliação..."
+        } else {
+            updateRatingButtonText()
+            renderRatingAvailability()
+        }
+    }
+
+    private fun updateRatingButtonText() {
+        binding.buttonSaveRating.text = if (currentRatingSummary.currentUserScore == null) {
+            "Salvar avaliação"
+        } else {
+            "Atualizar avaliação"
+        }
+    }
+
+    private fun isEventFinished(event: Event): Boolean {
+        return event.endAt?.compareTo(Timestamp.now())?.let { comparison ->
+            comparison <= 0
+        } ?: false
+    }
+
     private fun showLoading(isLoading: Boolean) {
         binding.progressEventDetail.visibility = if (isLoading) View.VISIBLE else View.GONE
 
@@ -330,6 +502,7 @@ class EventDetailActivity : AppCompatActivity() {
         binding.layoutDetailError.visibility = View.GONE
         binding.scrollEventDetail.visibility = View.VISIBLE
         currentRegistrationStatus?.let(::renderRegistrationButton)
+        renderRatingAvailability()
     }
 
     private fun showError(message: String) {
@@ -341,6 +514,7 @@ class EventDetailActivity : AppCompatActivity() {
 
     private fun renderRegistrationButton(isRegistered: Boolean) {
         currentRegistrationStatus = isRegistered
+        renderRatingAvailability()
 
         val event = currentEvent ?: return
         val isFull = event.maxParticipants > 0 &&
