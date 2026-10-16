@@ -59,6 +59,11 @@ class ProfileActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        binding.buttonMapTest.setOnClickListener {
+            val intent = Intent(this, MapTestActivity::class.java)
+            startActivity(intent)
+        }
+
         binding.buttonLogout.setOnClickListener {
             authViewModel.logout()
             navigateToMain()
