@@ -295,27 +295,6 @@
             app:strokeColor="#F0C7C7"
             app:strokeWidth="1dp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonMapTest"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical|start"
-            android:text="Testar Google Maps"
-            android:textAllCaps="false"
-            android:textColor="#1557D6"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:backgroundTint="#FFFFFF"
-            app:cornerRadius="18dp"
-            app:icon="@drawable/ic_location_24"
-            app:iconGravity="textStart"
-            app:iconPadding="12dp"
-            app:iconTint="#1557D6"
-            app:strokeColor="#D8E1F0"
-            app:strokeWidth="1dp" />
-
     </LinearLayout>
 
 </androidx.core.widget.NestedScrollView>
