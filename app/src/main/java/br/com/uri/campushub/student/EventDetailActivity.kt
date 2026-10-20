@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.uri.campushub.databinding.ActivityEventDetailBinding
@@ -32,13 +33,16 @@ import br.com.uri.campushub.viewmodel.RegistrationState
 import br.com.uri.campushub.viewmodel.RegistrationViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.Timestamp
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.UUID
 
 class EventDetailActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_EVENT_ID = "event_id"
+        private const val STATE_PENDING_PHOTO_PATH = "pending_photo_path"
     }
 
     private lateinit var binding: ActivityEventDetailBinding
@@ -58,6 +62,7 @@ class EventDetailActivity : AppCompatActivity() {
     private var isRatingSummaryLoaded = false
     private var ratingSummaryError: String? = null
     private var isRatingActionLoading = false
+    private var pendingPhotoFile: File? = null
 
     private val photoPicker = registerForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -67,12 +72,32 @@ class EventDetailActivity : AppCompatActivity() {
         }
     }
 
+    private val takePhoto = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { wasCaptured ->
+        val photoFile = pendingPhotoFile
+
+        if (wasCaptured && photoFile != null && photoFile.exists()) {
+            val photoUri = FileProvider.getUriForFile(
+                this,
+                "$packageName.fileprovider",
+                photoFile
+            )
+            publicationViewModel.publish(eventId, PublicationType.PHOTO, photoUri)
+        } else {
+            clearPendingPhoto()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityEventDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
+        pendingPhotoFile = savedInstanceState
+            ?.getString(STATE_PENDING_PHOTO_PATH)
+            ?.let(::File)
 
         setupViewModel()
         setupCommentRecyclerView()
@@ -98,6 +123,13 @@ class EventDetailActivity : AppCompatActivity() {
             ratingViewModel.loadRatingSummary(eventId)
             publicationViewModel.loadPublications(eventId)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        pendingPhotoFile?.let { file ->
+            outState.putString(STATE_PENDING_PHOTO_PATH, file.absolutePath)
+        }
+        super.onSaveInstanceState(outState)
     }
 
     private fun setupViewModel() {
@@ -176,6 +208,10 @@ class EventDetailActivity : AppCompatActivity() {
             photoPicker.launch(
                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
             )
+        }
+
+        binding.buttonTakePhoto.setOnClickListener {
+            launchCamera()
         }
 
         binding.buttonSubmitComment.setOnClickListener {
@@ -375,12 +411,14 @@ class EventDetailActivity : AppCompatActivity() {
                 PublicationActionState.Loading -> setPublicationActionLoading(true)
                 is PublicationActionState.Success -> {
                     setPublicationActionLoading(false)
+                    clearPendingPhoto()
                     Toast.makeText(this, state.message, Toast.LENGTH_SHORT).show()
                     publicationViewModel.clearActionState()
                 }
 
                 is PublicationActionState.Error -> {
                     setPublicationActionLoading(false)
+                    clearPendingPhoto()
                     Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
                     publicationViewModel.clearActionState()
                 }
@@ -430,12 +468,46 @@ class EventDetailActivity : AppCompatActivity() {
     }
 
     private fun setPublicationActionLoading(isLoading: Boolean) {
+        binding.buttonTakePhoto.isEnabled = !isLoading
         binding.buttonChoosePhoto.isEnabled = !isLoading
         binding.buttonChoosePhoto.text = if (isLoading) {
             "Salvando publicação..."
         } else {
             "Escolher foto da galeria"
         }
+    }
+
+    private fun launchCamera() {
+        clearPendingPhoto()
+
+        val pendingDirectory = File(cacheDir, "pending_publication_photos")
+        if (!pendingDirectory.exists() && !pendingDirectory.mkdirs()) {
+            Toast.makeText(this, "Não foi possível preparar a câmera.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val photoFile = File(pendingDirectory, "${UUID.randomUUID()}.jpg")
+        pendingPhotoFile = photoFile
+        val photoUri = FileProvider.getUriForFile(
+            this,
+            "$packageName.fileprovider",
+            photoFile
+        )
+
+        runCatching { takePhoto.launch(photoUri) }
+            .onFailure {
+                clearPendingPhoto()
+                Toast.makeText(
+                    this,
+                    "Nenhum aplicativo de câmera foi encontrado.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+    }
+
+    private fun clearPendingPhoto() {
+        pendingPhotoFile?.delete()
+        pendingPhotoFile = null
     }
 
     private fun showCommentsLoading(isLoading: Boolean) {
