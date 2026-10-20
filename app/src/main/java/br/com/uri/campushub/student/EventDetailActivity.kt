@@ -4,12 +4,16 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.uri.campushub.databinding.ActivityEventDetailBinding
 import br.com.uri.campushub.model.Comment
 import br.com.uri.campushub.model.Event
+import br.com.uri.campushub.model.EventPublication
+import br.com.uri.campushub.model.PublicationType
 import br.com.uri.campushub.model.RatingSummary
 import br.com.uri.campushub.viewmodel.CommentActionState
 import br.com.uri.campushub.viewmodel.CommentListState
@@ -18,6 +22,9 @@ import br.com.uri.campushub.viewmodel.EventDetailState
 import br.com.uri.campushub.viewmodel.EventDetailViewModel
 import br.com.uri.campushub.viewmodel.FavoriteState
 import br.com.uri.campushub.viewmodel.FavoriteViewModel
+import br.com.uri.campushub.viewmodel.PublicationActionState
+import br.com.uri.campushub.viewmodel.PublicationListState
+import br.com.uri.campushub.viewmodel.PublicationViewModel
 import br.com.uri.campushub.viewmodel.RatingActionState
 import br.com.uri.campushub.viewmodel.RatingSummaryState
 import br.com.uri.campushub.viewmodel.RatingViewModel
@@ -40,7 +47,9 @@ class EventDetailActivity : AppCompatActivity() {
     private lateinit var favoriteViewModel: FavoriteViewModel
     private lateinit var commentViewModel: CommentViewModel
     private lateinit var ratingViewModel: RatingViewModel
+    private lateinit var publicationViewModel: PublicationViewModel
     private lateinit var commentAdapter: CommentAdapter
+    private lateinit var publicationAdapter: PublicationAdapter
     private lateinit var eventId: String
     private var editingCommentId: String? = null
     private var currentEvent: Event? = null
@@ -49,6 +58,14 @@ class EventDetailActivity : AppCompatActivity() {
     private var isRatingSummaryLoaded = false
     private var ratingSummaryError: String? = null
     private var isRatingActionLoading = false
+
+    private val photoPicker = registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null && ::eventId.isInitialized) {
+            publicationViewModel.publish(eventId, PublicationType.PHOTO, uri)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +76,7 @@ class EventDetailActivity : AppCompatActivity() {
 
         setupViewModel()
         setupCommentRecyclerView()
+        setupPublicationRecyclerView()
         setupListeners()
         observeEventDetailState()
         observeRegistrationState()
@@ -67,6 +85,8 @@ class EventDetailActivity : AppCompatActivity() {
         observeCommentActionState()
         observeRatingSummaryState()
         observeRatingActionState()
+        observePublicationListState()
+        observePublicationActionState()
 
         if (eventId.isBlank()) {
             showError("Evento inválido.")
@@ -76,6 +96,7 @@ class EventDetailActivity : AppCompatActivity() {
             favoriteViewModel.loadStatus(eventId)
             commentViewModel.loadComments(eventId)
             ratingViewModel.loadRatingSummary(eventId)
+            publicationViewModel.loadPublications(eventId)
         }
     }
 
@@ -85,6 +106,7 @@ class EventDetailActivity : AppCompatActivity() {
         favoriteViewModel = ViewModelProvider(this)[FavoriteViewModel::class.java]
         commentViewModel = ViewModelProvider(this)[CommentViewModel::class.java]
         ratingViewModel = ViewModelProvider(this)[RatingViewModel::class.java]
+        publicationViewModel = ViewModelProvider(this)[PublicationViewModel::class.java]
     }
 
     private fun setupCommentRecyclerView() {
@@ -95,6 +117,15 @@ class EventDetailActivity : AppCompatActivity() {
         )
         binding.recyclerComments.layoutManager = LinearLayoutManager(this)
         binding.recyclerComments.adapter = commentAdapter
+    }
+
+    private fun setupPublicationRecyclerView() {
+        publicationAdapter = PublicationAdapter(
+            currentUserId = publicationViewModel.currentUserId(),
+            onDeletePublication = ::confirmPublicationDeletion
+        )
+        binding.recyclerPublications.layoutManager = LinearLayoutManager(this)
+        binding.recyclerPublications.adapter = publicationAdapter
     }
 
     private fun setupListeners() {
@@ -113,6 +144,7 @@ class EventDetailActivity : AppCompatActivity() {
                 favoriteViewModel.loadStatus(eventId)
                 commentViewModel.loadComments(eventId)
                 ratingViewModel.loadRatingSummary(eventId)
+                publicationViewModel.loadPublications(eventId)
             }
         }
 
@@ -138,6 +170,12 @@ class EventDetailActivity : AppCompatActivity() {
                 putExtra(EventMapActivity.EXTRA_EVENT_ADDRESS, event.location)
             }
             startActivity(intent)
+        }
+
+        binding.buttonChoosePhoto.setOnClickListener {
+            photoPicker.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
         }
 
         binding.buttonSubmitComment.setOnClickListener {
@@ -316,6 +354,87 @@ class EventDetailActivity : AppCompatActivity() {
                     ratingViewModel.clearActionState()
                 }
             }
+        }
+    }
+
+    private fun observePublicationListState() {
+        publicationViewModel.listState.observe(this) { state ->
+            when (state) {
+                PublicationListState.Idle -> showPublicationsLoading(false)
+                PublicationListState.Loading -> showPublicationsLoading(true)
+                is PublicationListState.Success -> showPublications(state.publications)
+                is PublicationListState.Error -> showPublicationsError(state.message)
+            }
+        }
+    }
+
+    private fun observePublicationActionState() {
+        publicationViewModel.actionState.observe(this) { state ->
+            when (state) {
+                PublicationActionState.Idle -> setPublicationActionLoading(false)
+                PublicationActionState.Loading -> setPublicationActionLoading(true)
+                is PublicationActionState.Success -> {
+                    setPublicationActionLoading(false)
+                    Toast.makeText(this, state.message, Toast.LENGTH_SHORT).show()
+                    publicationViewModel.clearActionState()
+                }
+
+                is PublicationActionState.Error -> {
+                    setPublicationActionLoading(false)
+                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                    publicationViewModel.clearActionState()
+                }
+            }
+        }
+    }
+
+    private fun showPublicationsLoading(isLoading: Boolean) {
+        binding.progressPublications.visibility = if (isLoading) View.VISIBLE else View.GONE
+
+        if (isLoading) {
+            binding.recyclerPublications.visibility = View.GONE
+            binding.textPublicationsMessage.visibility = View.GONE
+        }
+    }
+
+    private fun showPublications(publications: List<EventPublication>) {
+        showPublicationsLoading(false)
+        publicationAdapter.submitList(publications)
+
+        if (publications.isEmpty()) {
+            binding.recyclerPublications.visibility = View.GONE
+            binding.textPublicationsMessage.visibility = View.VISIBLE
+            binding.textPublicationsMessage.text = "Nenhuma publicação neste evento."
+        } else {
+            binding.recyclerPublications.visibility = View.VISIBLE
+            binding.textPublicationsMessage.visibility = View.GONE
+        }
+    }
+
+    private fun showPublicationsError(message: String) {
+        showPublicationsLoading(false)
+        binding.recyclerPublications.visibility = View.GONE
+        binding.textPublicationsMessage.visibility = View.VISIBLE
+        binding.textPublicationsMessage.text = message
+    }
+
+    private fun confirmPublicationDeletion(publication: EventPublication) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Excluir publicação?")
+            .setMessage("O arquivo será removido deste dispositivo.")
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Excluir") { _, _ ->
+                publicationViewModel.deletePublication(eventId, publication.id)
+            }
+            .show()
+    }
+
+    private fun setPublicationActionLoading(isLoading: Boolean) {
+        binding.buttonChoosePhoto.isEnabled = !isLoading
+        binding.buttonChoosePhoto.text = if (isLoading) {
+            "Salvando publicação..."
+        } else {
+            "Escolher foto da galeria"
         }
     }
 
