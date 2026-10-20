@@ -1,5 +1,6 @@
 package br.com.uri.campushub.student
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -121,6 +122,22 @@ class EventDetailActivity : AppCompatActivity() {
 
         binding.buttonFavorite.setOnClickListener {
             favoriteViewModel.toggleFavorite(eventId)
+        }
+
+        binding.buttonViewMap.setOnClickListener {
+            val event = currentEvent ?: return@setOnClickListener
+
+            if (event.location.isBlank()) {
+                Toast.makeText(this, "Este evento ainda não possui endereço.", Toast.LENGTH_SHORT)
+                    .show()
+                return@setOnClickListener
+            }
+
+            val intent = Intent(this, EventMapActivity::class.java).apply {
+                putExtra(EventMapActivity.EXTRA_EVENT_TITLE, event.title)
+                putExtra(EventMapActivity.EXTRA_EVENT_ADDRESS, event.location)
+            }
+            startActivity(intent)
         }
 
         binding.buttonSubmitComment.setOnClickListener {
@@ -496,6 +513,7 @@ class EventDetailActivity : AppCompatActivity() {
         binding.textDetailStart.text = formatDate(event.startAt)
         binding.textDetailEnd.text = formatDate(event.endAt)
         binding.textDetailLocation.text = event.location.ifBlank { "Local a definir" }
+        binding.buttonViewMap.visibility = if (event.location.isBlank()) View.GONE else View.VISIBLE
         binding.textDetailOrganizer.text = event.organizer.ifBlank { "Organizador não informado" }
         binding.textDetailParticipants.text = formatParticipants(event)
 
