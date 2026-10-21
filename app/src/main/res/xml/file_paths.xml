@@ -3,4 +3,7 @@
     <cache-path
         name="pending_publication_photos"
         path="pending_publication_photos/" />
+    <cache-path
+        name="pending_publication_audio"
+        path="pending_publication_audio/" />
 </paths>

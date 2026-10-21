@@ -383,6 +383,19 @@
                 app:cornerRadius="16dp"
                 app:strokeColor="#1557D6" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonRecordAudio"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="10dp"
+                android:text="Gravar áudio (até 30s)"
+                android:textAllCaps="false"
+                android:textColor="#1557D6"
+                android:textStyle="bold"
+                app:cornerRadius="16dp"
+                app:strokeColor="#1557D6" />
+
             <ProgressBar
                 android:id="@+id/progressPublications"
                 android:layout_width="wrap_content"

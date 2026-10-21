@@ -1,6 +1,10 @@
 package br.com.uri.campushub.student
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.media.MediaRecorder
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -8,6 +12,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import br.com.uri.campushub.databinding.ActivityEventDetailBinding
@@ -43,6 +48,7 @@ class EventDetailActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_EVENT_ID = "event_id"
         private const val STATE_PENDING_PHOTO_PATH = "pending_photo_path"
+        private const val STATE_PENDING_AUDIO_PATH = "pending_audio_path"
     }
 
     private lateinit var binding: ActivityEventDetailBinding
@@ -63,6 +69,10 @@ class EventDetailActivity : AppCompatActivity() {
     private var ratingSummaryError: String? = null
     private var isRatingActionLoading = false
     private var pendingPhotoFile: File? = null
+    private var pendingAudioFile: File? = null
+    private var audioRecorder: MediaRecorder? = null
+    private var isRecordingAudio = false
+    private var isPublicationActionLoading = false
 
     private val photoPicker = registerForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -89,6 +99,20 @@ class EventDetailActivity : AppCompatActivity() {
         }
     }
 
+    private val requestAudioPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { wasGranted ->
+        if (wasGranted) {
+            startAudioRecording()
+        } else {
+            Toast.makeText(
+                this,
+                "A permissão do microfone é necessária para gravar áudio.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityEventDetailBinding.inflate(layoutInflater)
@@ -97,6 +121,9 @@ class EventDetailActivity : AppCompatActivity() {
         eventId = intent.getStringExtra(EXTRA_EVENT_ID).orEmpty()
         pendingPhotoFile = savedInstanceState
             ?.getString(STATE_PENDING_PHOTO_PATH)
+            ?.let(::File)
+        pendingAudioFile = savedInstanceState
+            ?.getString(STATE_PENDING_AUDIO_PATH)
             ?.let(::File)
 
         setupViewModel()
@@ -129,7 +156,15 @@ class EventDetailActivity : AppCompatActivity() {
         pendingPhotoFile?.let { file ->
             outState.putString(STATE_PENDING_PHOTO_PATH, file.absolutePath)
         }
+        pendingAudioFile?.let { file ->
+            outState.putString(STATE_PENDING_AUDIO_PATH, file.absolutePath)
+        }
         super.onSaveInstanceState(outState)
+    }
+
+    override fun onDestroy() {
+        if (isRecordingAudio) cancelAudioRecording()
+        super.onDestroy()
     }
 
     private fun setupViewModel() {
@@ -212,6 +247,14 @@ class EventDetailActivity : AppCompatActivity() {
 
         binding.buttonTakePhoto.setOnClickListener {
             launchCamera()
+        }
+
+        binding.buttonRecordAudio.setOnClickListener {
+            if (isRecordingAudio) {
+                stopAndPublishAudio()
+            } else {
+                checkAudioPermissionAndRecord()
+            }
         }
 
         binding.buttonSubmitComment.setOnClickListener {
@@ -412,6 +455,7 @@ class EventDetailActivity : AppCompatActivity() {
                 is PublicationActionState.Success -> {
                     setPublicationActionLoading(false)
                     clearPendingPhoto()
+                    clearPendingAudio()
                     Toast.makeText(this, state.message, Toast.LENGTH_SHORT).show()
                     publicationViewModel.clearActionState()
                 }
@@ -419,6 +463,7 @@ class EventDetailActivity : AppCompatActivity() {
                 is PublicationActionState.Error -> {
                     setPublicationActionLoading(false)
                     clearPendingPhoto()
+                    clearPendingAudio()
                     Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
                     publicationViewModel.clearActionState()
                 }
@@ -468,12 +513,126 @@ class EventDetailActivity : AppCompatActivity() {
     }
 
     private fun setPublicationActionLoading(isLoading: Boolean) {
-        binding.buttonTakePhoto.isEnabled = !isLoading
-        binding.buttonChoosePhoto.isEnabled = !isLoading
+        isPublicationActionLoading = isLoading
+        renderPublicationButtons()
         binding.buttonChoosePhoto.text = if (isLoading) {
             "Salvando publicação..."
         } else {
             "Escolher foto da galeria"
+        }
+    }
+
+    private fun renderPublicationButtons() {
+        binding.buttonTakePhoto.isEnabled = !isPublicationActionLoading && !isRecordingAudio
+        binding.buttonChoosePhoto.isEnabled = !isPublicationActionLoading && !isRecordingAudio
+        binding.buttonRecordAudio.isEnabled = !isPublicationActionLoading
+        binding.buttonRecordAudio.text = if (isRecordingAudio) {
+            "Parar e publicar áudio"
+        } else {
+            "Gravar áudio (até 30s)"
+        }
+    }
+
+    private fun checkAudioPermissionAndRecord() {
+        if (
+            ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            startAudioRecording()
+        } else {
+            requestAudioPermission.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
+
+    private fun startAudioRecording() {
+        clearPendingAudio()
+
+        val pendingDirectory = File(cacheDir, "pending_publication_audio")
+        if (!pendingDirectory.exists() && !pendingDirectory.mkdirs()) {
+            Toast.makeText(this, "Não foi possível preparar a gravação.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val audioFile = File(pendingDirectory, "${UUID.randomUUID()}.m4a")
+        val recorder = createMediaRecorder()
+        pendingAudioFile = audioFile
+        audioRecorder = recorder
+
+        val result = runCatching {
+            recorder.setAudioSource(MediaRecorder.AudioSource.MIC)
+            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            recorder.setAudioEncodingBitRate(128_000)
+            recorder.setAudioSamplingRate(44_100)
+            recorder.setMaxDuration(30_000)
+            recorder.setOutputFile(audioFile.absolutePath)
+            recorder.setOnInfoListener { _, what, _ ->
+                if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
+                    runOnUiThread { stopAndPublishAudio() }
+                }
+            }
+            recorder.prepare()
+            recorder.start()
+        }
+
+        result.onSuccess {
+            isRecordingAudio = true
+            renderPublicationButtons()
+            Toast.makeText(this, "Gravação iniciada.", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            recorder.release()
+            audioRecorder = null
+            clearPendingAudio()
+            Toast.makeText(this, "Não foi possível iniciar a gravação.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun stopAndPublishAudio() {
+        val recorder = audioRecorder ?: return
+        val audioFile = pendingAudioFile
+        audioRecorder = null
+
+        val wasStopped = runCatching { recorder.stop() }.isSuccess
+        recorder.release()
+        isRecordingAudio = false
+        renderPublicationButtons()
+
+        if (!wasStopped || audioFile == null || !audioFile.exists() || audioFile.length() == 0L) {
+            clearPendingAudio()
+            Toast.makeText(this, "O áudio ficou muito curto. Tente novamente.", Toast.LENGTH_LONG)
+                .show()
+            return
+        }
+
+        val audioUri = FileProvider.getUriForFile(
+            this,
+            "$packageName.fileprovider",
+            audioFile
+        )
+        publicationViewModel.publish(eventId, PublicationType.AUDIO, audioUri)
+    }
+
+    private fun cancelAudioRecording() {
+        audioRecorder?.let { recorder ->
+            runCatching { recorder.stop() }
+            recorder.release()
+        }
+        audioRecorder = null
+        isRecordingAudio = false
+        clearPendingAudio()
+    }
+
+    private fun clearPendingAudio() {
+        pendingAudioFile?.delete()
+        pendingAudioFile = null
+    }
+
+    @Suppress("DEPRECATION")
+    private fun createMediaRecorder(): MediaRecorder {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(this)
+        } else {
+            MediaRecorder()
         }
     }
 

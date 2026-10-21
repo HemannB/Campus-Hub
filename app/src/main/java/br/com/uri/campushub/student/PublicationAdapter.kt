@@ -49,17 +49,24 @@ class PublicationAdapter(
                 onDeletePublication(publication)
             }
 
-            if (publication.type == PublicationType.PHOTO) {
-                binding.imagePublication.visibility = View.VISIBLE
-                binding.textUnsupportedPublication.visibility = View.GONE
-                binding.imagePublication.setImageBitmap(
-                    decodeSampledBitmap(publication.localPath, 1000, 700)
-                )
-            } else {
-                binding.imagePublication.visibility = View.GONE
-                binding.textUnsupportedPublication.visibility = View.VISIBLE
-                binding.textUnsupportedPublication.text = "Mídia disponível em breve."
+            when (publication.type) {
+                PublicationType.PHOTO -> {
+                    binding.imagePublication.visibility = View.VISIBLE
+                    binding.textUnsupportedPublication.visibility = View.GONE
+                    binding.imagePublication.setImageBitmap(
+                        decodeSampledBitmap(publication.localPath, 1000, 700)
+                    )
+                }
+
+                PublicationType.AUDIO -> showMediaLabel("Áudio gravado")
+                PublicationType.VIDEO -> showMediaLabel("Vídeo publicado")
             }
+        }
+
+        private fun showMediaLabel(label: String) {
+            binding.imagePublication.visibility = View.GONE
+            binding.textUnsupportedPublication.visibility = View.VISIBLE
+            binding.textUnsupportedPublication.text = label
         }
     }
 
