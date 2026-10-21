@@ -17,8 +17,11 @@ import java.util.Locale
 
 class PublicationAdapter(
     private val currentUserId: String?,
-    private val onDeletePublication: (EventPublication) -> Unit
+    private val onDeletePublication: (EventPublication) -> Unit,
+    private val onToggleAudio: (EventPublication) -> Unit
 ) : ListAdapter<EventPublication, PublicationAdapter.PublicationViewHolder>(DiffCallback) {
+
+    private var playingAudioId: String? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PublicationViewHolder {
         val binding = ItemEventPublicationBinding.inflate(
@@ -48,6 +51,7 @@ class PublicationAdapter(
             binding.buttonDeletePublication.setOnClickListener {
                 onDeletePublication(publication)
             }
+            binding.buttonPlayAudio.visibility = View.GONE
 
             when (publication.type) {
                 PublicationType.PHOTO -> {
@@ -58,7 +62,18 @@ class PublicationAdapter(
                     )
                 }
 
-                PublicationType.AUDIO -> showMediaLabel("Áudio gravado")
+                PublicationType.AUDIO -> {
+                    showMediaLabel("Áudio gravado")
+                    binding.buttonPlayAudio.visibility = View.VISIBLE
+                    binding.buttonPlayAudio.text = if (publication.id == playingAudioId) {
+                        "Parar áudio"
+                    } else {
+                        "Reproduzir áudio"
+                    }
+                    binding.buttonPlayAudio.setOnClickListener {
+                        onToggleAudio(publication)
+                    }
+                }
                 PublicationType.VIDEO -> showMediaLabel("Vídeo publicado")
             }
         }
@@ -68,6 +83,11 @@ class PublicationAdapter(
             binding.textUnsupportedPublication.visibility = View.VISIBLE
             binding.textUnsupportedPublication.text = label
         }
+    }
+
+    fun setPlayingAudio(publicationId: String?) {
+        playingAudioId = publicationId
+        notifyDataSetChanged()
     }
 
     private fun formatDate(timestamp: Long): String {

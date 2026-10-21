@@ -3,6 +3,7 @@ package br.com.uri.campushub.student
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
@@ -71,6 +72,8 @@ class EventDetailActivity : AppCompatActivity() {
     private var pendingPhotoFile: File? = null
     private var pendingAudioFile: File? = null
     private var audioRecorder: MediaRecorder? = null
+    private var audioPlayer: MediaPlayer? = null
+    private var playingAudioId: String? = null
     private var isRecordingAudio = false
     private var isPublicationActionLoading = false
 
@@ -164,6 +167,7 @@ class EventDetailActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         if (isRecordingAudio) cancelAudioRecording()
+        stopAudioPlayback()
         super.onDestroy()
     }
 
@@ -189,7 +193,8 @@ class EventDetailActivity : AppCompatActivity() {
     private fun setupPublicationRecyclerView() {
         publicationAdapter = PublicationAdapter(
             currentUserId = publicationViewModel.currentUserId(),
-            onDeletePublication = ::confirmPublicationDeletion
+            onDeletePublication = ::confirmPublicationDeletion,
+            onToggleAudio = ::toggleAudioPlayback
         )
         binding.recyclerPublications.layoutManager = LinearLayoutManager(this)
         binding.recyclerPublications.adapter = publicationAdapter
@@ -507,9 +512,62 @@ class EventDetailActivity : AppCompatActivity() {
             .setMessage("O arquivo será removido deste dispositivo.")
             .setNegativeButton("Cancelar", null)
             .setPositiveButton("Excluir") { _, _ ->
+                if (publication.id == playingAudioId) stopAudioPlayback()
                 publicationViewModel.deletePublication(eventId, publication.id)
             }
             .show()
+    }
+
+    private fun toggleAudioPlayback(publication: EventPublication) {
+        if (publication.id == playingAudioId) {
+            stopAudioPlayback()
+        } else {
+            playAudio(publication)
+        }
+    }
+
+    private fun playAudio(publication: EventPublication) {
+        stopAudioPlayback()
+
+        val player = MediaPlayer()
+        audioPlayer = player
+        playingAudioId = publication.id
+        publicationAdapter.setPlayingAudio(publication.id)
+
+        player.setOnPreparedListener { preparedPlayer ->
+            preparedPlayer.start()
+        }
+        player.setOnCompletionListener {
+            stopAudioPlayback()
+        }
+        player.setOnErrorListener { _, _, _ ->
+            stopAudioPlayback()
+            Toast.makeText(this, "Não foi possível reproduzir o áudio.", Toast.LENGTH_LONG).show()
+            true
+        }
+
+        runCatching {
+            player.setDataSource(publication.localPath)
+            player.prepareAsync()
+        }.onFailure {
+            stopAudioPlayback()
+            Toast.makeText(this, "Não foi possível abrir o áudio.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun stopAudioPlayback() {
+        audioPlayer?.let { player ->
+            runCatching {
+                if (player.isPlaying) player.stop()
+            }
+            player.release()
+        }
+        audioPlayer = null
+        playingAudioId = null
+
+        if (::publicationAdapter.isInitialized) {
+            publicationAdapter.setPlayingAudio(null)
+        }
     }
 
     private fun setPublicationActionLoading(isLoading: Boolean) {
