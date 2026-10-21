@@ -355,7 +355,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:text="Compartilhe fotos e experiências relacionadas ao evento."
+                android:text="Compartilhe fotos, áudios e vídeos relacionados ao evento."
                 android:textColor="#667085"
                 android:textSize="14sp" />
 
@@ -390,6 +390,19 @@
                 android:layout_height="52dp"
                 android:layout_marginTop="10dp"
                 android:text="Gravar áudio (até 30s)"
+                android:textAllCaps="false"
+                android:textColor="#1557D6"
+                android:textStyle="bold"
+                app:cornerRadius="16dp"
+                app:strokeColor="#1557D6" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonChooseVideo"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="10dp"
+                android:text="Escolher vídeo (até 30s)"
                 android:textAllCaps="false"
                 android:textColor="#1557D6"
                 android:textStyle="bold"

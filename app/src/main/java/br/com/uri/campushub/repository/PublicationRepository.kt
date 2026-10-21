@@ -1,6 +1,7 @@
 package br.com.uri.campushub.repository
 
 import android.content.Context
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import br.com.uri.campushub.model.EventPublication
@@ -19,6 +20,7 @@ class PublicationRepository(
         private const val PREFERENCES_NAME = "event_publications"
         private const val PUBLICATIONS_KEY = "publications"
         private const val PUBLICATIONS_DIRECTORY = "event_publications"
+        private const val MAX_VIDEO_DURATION_MS = 30_000L
     }
 
     private val appContext = context.applicationContext
@@ -44,6 +46,8 @@ class PublicationRepository(
         val userId = requireAuthenticatedUser()
         require(eventId.isNotBlank()) { "Evento inválido." }
         require(authorName.isNotBlank()) { "Autor não identificado." }
+
+        if (type == PublicationType.VIDEO) validateVideoDuration(sourceUri)
 
         val publicationId = UUID.randomUUID().toString()
         val extension = resolveExtension(sourceUri, type)
@@ -119,6 +123,24 @@ class PublicationRepository(
                 PublicationType.AUDIO -> "m4a"
                 PublicationType.VIDEO -> "mp4"
             }
+    }
+
+    private fun validateVideoDuration(sourceUri: Uri) {
+        val retriever = MediaMetadataRetriever()
+
+        try {
+            retriever.setDataSource(appContext, sourceUri)
+            val duration = retriever
+                .extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                ?.toLongOrNull()
+                ?: error("Não foi possível verificar a duração do vídeo.")
+
+            require(duration <= MAX_VIDEO_DURATION_MS) {
+                "Escolha um vídeo de até 30 segundos."
+            }
+        } finally {
+            retriever.release()
+        }
     }
 
     private fun readAll(): List<EventPublication> {

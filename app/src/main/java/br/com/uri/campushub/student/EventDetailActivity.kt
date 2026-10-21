@@ -85,6 +85,14 @@ class EventDetailActivity : AppCompatActivity() {
         }
     }
 
+    private val videoPicker = registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null && ::eventId.isInitialized) {
+            publicationViewModel.publish(eventId, PublicationType.VIDEO, uri)
+        }
+    }
+
     private val takePhoto = registerForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { wasCaptured ->
@@ -260,6 +268,12 @@ class EventDetailActivity : AppCompatActivity() {
             } else {
                 checkAudioPermissionAndRecord()
             }
+        }
+
+        binding.buttonChooseVideo.setOnClickListener {
+            videoPicker.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)
+            )
         }
 
         binding.buttonSubmitComment.setOnClickListener {
@@ -578,12 +592,18 @@ class EventDetailActivity : AppCompatActivity() {
         } else {
             "Escolher foto da galeria"
         }
+        binding.buttonChooseVideo.text = if (isLoading) {
+            "Salvando publicação..."
+        } else {
+            "Escolher vídeo (até 30s)"
+        }
     }
 
     private fun renderPublicationButtons() {
         binding.buttonTakePhoto.isEnabled = !isPublicationActionLoading && !isRecordingAudio
         binding.buttonChoosePhoto.isEnabled = !isPublicationActionLoading && !isRecordingAudio
         binding.buttonRecordAudio.isEnabled = !isPublicationActionLoading
+        binding.buttonChooseVideo.isEnabled = !isPublicationActionLoading && !isRecordingAudio
         binding.buttonRecordAudio.text = if (isRecordingAudio) {
             "Parar e publicar áudio"
         } else {
