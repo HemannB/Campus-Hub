@@ -587,16 +587,6 @@ class EventDetailActivity : AppCompatActivity() {
     private fun setPublicationActionLoading(isLoading: Boolean) {
         isPublicationActionLoading = isLoading
         renderPublicationButtons()
-        binding.buttonChoosePhoto.text = if (isLoading) {
-            "Salvando publicação..."
-        } else {
-            "Escolher foto da galeria"
-        }
-        binding.buttonChooseVideo.text = if (isLoading) {
-            "Salvando publicação..."
-        } else {
-            "Escolher vídeo (até 30s)"
-        }
     }
 
     private fun renderPublicationButtons() {
@@ -605,9 +595,9 @@ class EventDetailActivity : AppCompatActivity() {
         binding.buttonRecordAudio.isEnabled = !isPublicationActionLoading
         binding.buttonChooseVideo.isEnabled = !isPublicationActionLoading && !isRecordingAudio
         binding.buttonRecordAudio.text = if (isRecordingAudio) {
-            "Parar e publicar áudio"
+            "Parar áudio"
         } else {
-            "Gravar áudio (até 30s)"
+            "Gravar áudio"
         }
     }
 

@@ -359,55 +359,131 @@
                 android:textColor="#667085"
                 android:textSize="14sp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonTakePhoto"
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="14dp"
-                android:text="Tirar foto"
-                android:textAllCaps="false"
-                android:textStyle="bold"
-                app:backgroundTint="#1557D6"
-                app:cornerRadius="16dp" />
+                app:cardBackgroundColor="#F8FAFC"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#E4E7EC"
+                app:strokeWidth="1dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonChoosePhoto"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="10dp"
-                android:text="Escolher foto da galeria"
-                android:textAllCaps="false"
-                android:textColor="#1557D6"
-                android:textStyle="bold"
-                app:cornerRadius="16dp"
-                app:strokeColor="#1557D6" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonRecordAudio"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="10dp"
-                android:text="Gravar áudio (até 30s)"
-                android:textAllCaps="false"
-                android:textColor="#1557D6"
-                android:textStyle="bold"
-                app:cornerRadius="16dp"
-                app:strokeColor="#1557D6" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonChooseVideo"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="10dp"
-                android:text="Escolher vídeo (até 30s)"
-                android:textAllCaps="false"
-                android:textColor="#1557D6"
-                android:textStyle="bold"
-                app:cornerRadius="16dp"
-                app:strokeColor="#1557D6" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonTakePhoto"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="50dp"
+                            android:layout_weight="1"
+                            android:minWidth="0dp"
+                            android:text="Câmera"
+                            android:textAllCaps="false"
+                            android:textColor="#1557D6"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            app:backgroundTint="#FFFFFF"
+                            app:cornerRadius="14dp"
+                            app:icon="@drawable/ic_camera_24"
+                            app:iconPadding="6dp"
+                            app:iconSize="20dp"
+                            app:iconTint="#1557D6"
+                            app:strokeColor="#B8C8E8" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonChoosePhoto"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="50dp"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:minWidth="0dp"
+                            android:text="Galeria"
+                            android:textAllCaps="false"
+                            android:textColor="#1557D6"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            app:backgroundTint="#FFFFFF"
+                            app:cornerRadius="14dp"
+                            app:icon="@drawable/ic_gallery_24"
+                            app:iconPadding="6dp"
+                            app:iconSize="20dp"
+                            app:iconTint="#1557D6"
+                            app:strokeColor="#B8C8E8" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonRecordAudio"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="50dp"
+                            android:layout_weight="1"
+                            android:minWidth="0dp"
+                            android:text="Gravar áudio"
+                            android:textAllCaps="false"
+                            android:textColor="#1557D6"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            app:backgroundTint="#FFFFFF"
+                            app:cornerRadius="14dp"
+                            app:icon="@drawable/ic_mic_24"
+                            app:iconPadding="6dp"
+                            app:iconSize="20dp"
+                            app:iconTint="#1557D6"
+                            app:strokeColor="#B8C8E8" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonChooseVideo"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="50dp"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:minWidth="0dp"
+                            android:text="Vídeo"
+                            android:textAllCaps="false"
+                            android:textColor="#1557D6"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            app:backgroundTint="#FFFFFF"
+                            app:cornerRadius="14dp"
+                            app:icon="@drawable/ic_videocam_24"
+                            app:iconPadding="6dp"
+                            app:iconSize="20dp"
+                            app:iconTint="#1557D6"
+                            app:strokeColor="#B8C8E8" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center"
+                        android:text="Áudios e vídeos de até 30 segundos"
+                        android:textColor="#667085"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
 
             <ProgressBar
                 android:id="@+id/progressPublications"
