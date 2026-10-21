@@ -18,7 +18,8 @@ import java.util.Locale
 class PublicationAdapter(
     private val currentUserId: String?,
     private val onDeletePublication: (EventPublication) -> Unit,
-    private val onToggleAudio: (EventPublication) -> Unit
+    private val onToggleAudio: (EventPublication) -> Unit,
+    private val onPlayVideo: (EventPublication) -> Unit
 ) : ListAdapter<EventPublication, PublicationAdapter.PublicationViewHolder>(DiffCallback) {
 
     private var playingAudioId: String? = null
@@ -52,6 +53,7 @@ class PublicationAdapter(
                 onDeletePublication(publication)
             }
             binding.buttonPlayAudio.visibility = View.GONE
+            binding.buttonPlayVideo.visibility = View.GONE
 
             when (publication.type) {
                 PublicationType.PHOTO -> {
@@ -74,7 +76,13 @@ class PublicationAdapter(
                         onToggleAudio(publication)
                     }
                 }
-                PublicationType.VIDEO -> showMediaLabel("Vídeo publicado")
+                PublicationType.VIDEO -> {
+                    showMediaLabel("Vídeo publicado")
+                    binding.buttonPlayVideo.visibility = View.VISIBLE
+                    binding.buttonPlayVideo.setOnClickListener {
+                        onPlayVideo(publication)
+                    }
+                }
             }
         }
 

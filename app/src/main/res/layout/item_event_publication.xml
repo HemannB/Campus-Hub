@@ -93,6 +93,20 @@
             app:cornerRadius="16dp"
             app:strokeColor="#1557D6" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonPlayVideo"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:text="Assistir vídeo"
+            android:textAllCaps="false"
+            android:textColor="#1557D6"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:cornerRadius="16dp"
+            app:strokeColor="#1557D6" />
+
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

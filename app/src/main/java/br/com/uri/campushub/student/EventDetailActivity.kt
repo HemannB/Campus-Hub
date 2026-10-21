@@ -8,7 +8,10 @@ import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
+import android.widget.MediaController
 import android.widget.Toast
+import android.widget.VideoView
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -202,7 +205,8 @@ class EventDetailActivity : AppCompatActivity() {
         publicationAdapter = PublicationAdapter(
             currentUserId = publicationViewModel.currentUserId(),
             onDeletePublication = ::confirmPublicationDeletion,
-            onToggleAudio = ::toggleAudioPlayback
+            onToggleAudio = ::toggleAudioPlayback,
+            onPlayVideo = ::showVideoPlayer
         )
         binding.recyclerPublications.layoutManager = LinearLayoutManager(this)
         binding.recyclerPublications.adapter = publicationAdapter
@@ -582,6 +586,48 @@ class EventDetailActivity : AppCompatActivity() {
         if (::publicationAdapter.isInitialized) {
             publicationAdapter.setPlayingAudio(null)
         }
+    }
+
+    private fun showVideoPlayer(publication: EventPublication) {
+        val videoFile = File(publication.localPath)
+        if (!videoFile.exists()) {
+            Toast.makeText(this, "O arquivo do vídeo não foi encontrado.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        stopAudioPlayback()
+
+        val videoView = VideoView(this).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                (240 * resources.displayMetrics.density).toInt()
+            )
+        }
+        val mediaController = MediaController(this).apply {
+            setAnchorView(videoView)
+        }
+        videoView.setMediaController(mediaController)
+        videoView.setVideoPath(videoFile.absolutePath)
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle("Vídeo publicado")
+            .setView(videoView)
+            .setNegativeButton("Fechar", null)
+            .create()
+
+        videoView.setOnPreparedListener { player ->
+            player.isLooping = false
+            videoView.start()
+        }
+        videoView.setOnErrorListener { _, _, _ ->
+            Toast.makeText(this, "Não foi possível reproduzir o vídeo.", Toast.LENGTH_LONG).show()
+            dialog.dismiss()
+            true
+        }
+        dialog.setOnDismissListener {
+            videoView.stopPlayback()
+        }
+        dialog.show()
     }
 
     private fun setPublicationActionLoading(isLoading: Boolean) {
