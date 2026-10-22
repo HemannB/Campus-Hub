@@ -97,9 +97,16 @@ class RatingRepository(
                 )
             }
 
+            val eventStart = eventSnapshot.getTimestamp("startAt")
             val eventEnd = eventSnapshot.getTimestamp("endAt")
 
-            if (eventEnd == null || eventEnd.compareTo(Timestamp.now()) > 0) {
+            if (eventStart == null || eventEnd == null || eventEnd.compareTo(eventStart) < 0) {
+                throw IllegalStateException(
+                    "O evento possui datas inválidas e não pode ser avaliado."
+                )
+            }
+
+            if (eventEnd.compareTo(Timestamp.now()) > 0) {
                 throw IllegalStateException(
                     "A avaliação estará disponível quando o evento terminar."
                 )

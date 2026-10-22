@@ -23,6 +23,7 @@ import br.com.uri.campushub.databinding.ActivityEventDetailBinding
 import br.com.uri.campushub.model.Comment
 import br.com.uri.campushub.model.Event
 import br.com.uri.campushub.model.EventPublication
+import br.com.uri.campushub.model.EventRatingEligibility
 import br.com.uri.campushub.model.PublicationType
 import br.com.uri.campushub.model.RatingSummary
 import br.com.uri.campushub.viewmodel.CommentActionState
@@ -289,10 +290,7 @@ class EventDetailActivity : AppCompatActivity() {
         }
 
         binding.buttonSaveRating.setOnClickListener {
-            ratingViewModel.saveRating(
-                eventId = eventId,
-                score = binding.ratingBarEvent.rating.toInt()
-            )
+            submitRating()
         }
     }
 
@@ -931,6 +929,31 @@ class EventDetailActivity : AppCompatActivity() {
         binding.buttonSaveRating.isEnabled = canRate && !isRatingActionLoading
     }
 
+    private fun submitRating() {
+        val event = currentEvent
+
+        val errorMessage = when {
+            event == null -> "Não foi possível verificar o evento."
+            !EventRatingEligibility.hasEnded(event) ->
+                "A avaliação estará disponível quando o evento terminar."
+            currentRegistrationStatus != true ->
+                "Somente alunos inscritos podem avaliar este evento."
+            !isRatingSummaryLoaded -> "Aguarde o carregamento das avaliações."
+            else -> null
+        }
+
+        if (errorMessage != null) {
+            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+            renderRatingAvailability()
+            return
+        }
+
+        ratingViewModel.saveRating(
+            eventId = eventId,
+            score = binding.ratingBarEvent.rating.toInt()
+        )
+    }
+
     private fun setRatingActionLoading(isLoading: Boolean) {
         isRatingActionLoading = isLoading
         binding.ratingBarEvent.isEnabled = !isLoading
@@ -953,9 +976,7 @@ class EventDetailActivity : AppCompatActivity() {
     }
 
     private fun isEventFinished(event: Event): Boolean {
-        return event.endAt?.compareTo(Timestamp.now())?.let { comparison ->
-            comparison <= 0
-        } ?: false
+        return EventRatingEligibility.hasEnded(event)
     }
 
     private fun showLoading(isLoading: Boolean) {
