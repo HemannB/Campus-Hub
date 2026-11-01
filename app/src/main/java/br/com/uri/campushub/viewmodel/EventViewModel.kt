@@ -83,11 +83,7 @@ class EventViewModel : ViewModel() {
     }
 
     private fun updateCategories(events: List<Event>) {
-        val availableCategories = events
-            .map { event -> event.category.trim() }
-            .filter { category -> category.isNotBlank() }
-            .distinct()
-            .sorted()
+        val availableCategories = EventFilter.categories(events)
 
         if (selectedCategory !in availableCategories) {
             selectedCategory = null
@@ -104,11 +100,13 @@ class EventViewModel : ViewModel() {
 
     private fun applyFilters() {
         val now = Timestamp.now()
-        val filteredEvents = allEvents.filter { event ->
-            matchesSearch(event) &&
-                matchesCategory(event) &&
-                matchesSituation(event, now)
-        }
+        val filteredEvents = EventFilter.apply(
+            events = allEvents,
+            searchQuery = searchQuery,
+            category = selectedCategory,
+            situation = selectedSituation,
+            now = now
+        )
 
         _eventState.value = EventState.Success(
             events = filteredEvents,
@@ -116,25 +114,5 @@ class EventViewModel : ViewModel() {
                 selectedCategory != null ||
                 selectedSituation != EventSituationFilter.ALL
         )
-    }
-
-    private fun matchesSearch(event: Event): Boolean {
-        return searchQuery.isBlank() ||
-            event.title.contains(searchQuery, ignoreCase = true)
-    }
-
-    private fun matchesCategory(event: Event): Boolean {
-        val category = selectedCategory ?: return true
-        return event.category.equals(category, ignoreCase = true)
-    }
-
-    private fun matchesSituation(event: Event, now: Timestamp): Boolean {
-        val isFinished = event.endAt?.compareTo(now)?.let { it < 0 } ?: false
-
-        return when (selectedSituation) {
-            EventSituationFilter.ALL -> true
-            EventSituationFilter.UPCOMING -> !isFinished
-            EventSituationFilter.FINISHED -> isFinished
-        }
     }
 }

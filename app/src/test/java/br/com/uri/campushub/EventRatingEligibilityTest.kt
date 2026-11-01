@@ -20,31 +20,20 @@ class EventRatingEligibilityTest {
     }
 
     @Test
-    fun `event can be rated exactly when it ends`() {
+    fun `event can be rated when or after it ends`() {
         val event = Event(startAt = startAt, endAt = endAt)
 
         assertTrue(EventRatingEligibility.hasEnded(event, endAt))
-    }
-
-    @Test
-    fun `event can be rated after it ends`() {
-        val event = Event(startAt = startAt, endAt = endAt)
-
         assertTrue(EventRatingEligibility.hasEnded(event, Timestamp(2_001, 0)))
     }
 
     @Test
-    fun `event without an end date cannot be rated`() {
-        val event = Event(startAt = startAt, endAt = null)
+    fun `event without complete dates cannot be rated`() {
+        val withoutEnd = Event(startAt = startAt, endAt = null)
+        val withoutStart = Event(startAt = null, endAt = endAt)
 
-        assertFalse(EventRatingEligibility.hasEnded(event, Timestamp(3_000, 0)))
-    }
-
-    @Test
-    fun `event without a start date cannot be rated`() {
-        val event = Event(startAt = null, endAt = endAt)
-
-        assertFalse(EventRatingEligibility.hasEnded(event, Timestamp(3_000, 0)))
+        assertFalse(EventRatingEligibility.hasEnded(withoutEnd, Timestamp(3_000, 0)))
+        assertFalse(EventRatingEligibility.hasEnded(withoutStart, Timestamp(3_000, 0)))
     }
 
     @Test
