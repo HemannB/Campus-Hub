@@ -10,9 +10,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 class RatingRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-) {
+) : RatingDataSource {
 
-    fun getRatingSummary(
+    override fun getRatingSummary(
         eventId: String,
         onResult: (Result<RatingSummary>) -> Unit
     ) {
@@ -59,7 +59,7 @@ class RatingRepository(
             }
     }
 
-    fun saveRating(
+    override fun saveRating(
         eventId: String,
         score: Int,
         onResult: (Result<Unit>) -> Unit

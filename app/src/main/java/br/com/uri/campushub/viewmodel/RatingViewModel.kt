@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.uri.campushub.model.RatingSummary
+import br.com.uri.campushub.repository.RatingDataSource
 import br.com.uri.campushub.repository.RatingRepository
 
 sealed class RatingSummaryState {
@@ -20,9 +21,9 @@ sealed class RatingActionState {
     data class Error(val message: String) : RatingActionState()
 }
 
-class RatingViewModel : ViewModel() {
-
-    private val repository = RatingRepository()
+class RatingViewModel(
+    private val repository: RatingDataSource = RatingRepository()
+) : ViewModel() {
     private var currentSummary = RatingSummary()
 
     private val _summaryState =
@@ -54,7 +55,7 @@ class RatingViewModel : ViewModel() {
     }
 
     fun saveRating(eventId: String, score: Int) {
-        if (score !in 1..5) {
+        if (!RatingValidator.isValid(score)) {
             _actionState.value = RatingActionState.Error(
                 "Escolha uma nota de 1 a 5."
             )
