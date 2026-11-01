@@ -4,7 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 
 class AuthRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-) : AuthDataSource {
+) : AuthDataSource, PasswordResetDataSource {
     override fun isLoggedIn(): Boolean {
         return auth.currentUser != null
     }
@@ -29,7 +29,7 @@ class AuthRepository(
         auth.signOut()
     }
 
-    fun resetPassword(
+    override fun resetPassword(
         email: String,
         onResult: (Result<Unit>) -> Unit
     ) {

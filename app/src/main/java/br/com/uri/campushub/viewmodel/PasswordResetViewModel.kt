@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.uri.campushub.repository.AuthRepository
+import br.com.uri.campushub.repository.PasswordResetDataSource
 
 sealed class PasswordResetState {
     object Idle : PasswordResetState()
@@ -12,9 +13,9 @@ sealed class PasswordResetState {
     data class Error(val message: String) : PasswordResetState()
 }
 
-class PasswordResetViewModel : ViewModel() {
-
-    private val repository = AuthRepository()
+class PasswordResetViewModel(
+    private val repository: PasswordResetDataSource = AuthRepository()
+) : ViewModel() {
 
     private val _resetState = MutableLiveData<PasswordResetState>(PasswordResetState.Idle)
     val resetState: LiveData<PasswordResetState> = _resetState
