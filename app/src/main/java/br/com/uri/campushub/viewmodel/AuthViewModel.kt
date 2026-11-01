@@ -3,6 +3,7 @@ package br.com.uri.campushub.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import br.com.uri.campushub.repository.AuthDataSource
 import br.com.uri.campushub.repository.AuthRepository
 
 sealed class AuthState {
@@ -12,8 +13,9 @@ sealed class AuthState {
     data class Error(val message: String): AuthState()
 }
 
-class AuthViewModel: ViewModel() {
-    private val repository = AuthRepository()
+class AuthViewModel(
+    private val repository: AuthDataSource = AuthRepository()
+): ViewModel() {
 
     private val _authState = MutableLiveData<AuthState>(AuthState.Idle)
     val authState: LiveData<AuthState> = _authState

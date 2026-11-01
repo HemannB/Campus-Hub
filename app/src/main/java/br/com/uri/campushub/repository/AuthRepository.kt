@@ -4,12 +4,12 @@ import com.google.firebase.auth.FirebaseAuth
 
 class AuthRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-) {
-    fun isLoggedIn(): Boolean {
+) : AuthDataSource {
+    override fun isLoggedIn(): Boolean {
         return auth.currentUser != null
     }
 
-    fun login(
+    override fun login(
         email: String,
         password: String,
         onResult: (Result<Unit>) -> Unit
@@ -25,7 +25,7 @@ class AuthRepository(
             }
     }
 
-    fun logout() {
+    override fun logout() {
         auth.signOut()
     }
 
