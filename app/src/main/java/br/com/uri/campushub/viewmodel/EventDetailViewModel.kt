@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.uri.campushub.model.Event
+import br.com.uri.campushub.repository.EventDataSource
 import br.com.uri.campushub.repository.EventRepository
 
 sealed class EventDetailState {
@@ -13,9 +14,9 @@ sealed class EventDetailState {
     data class Error(val message: String) : EventDetailState()
 }
 
-class EventDetailViewModel : ViewModel() {
-
-    private val repository = EventRepository()
+class EventDetailViewModel(
+    private val repository: EventDataSource = EventRepository()
+) : ViewModel() {
 
     private val _eventDetailState = MutableLiveData<EventDetailState>(EventDetailState.Idle)
     val eventDetailState: LiveData<EventDetailState> = _eventDetailState

@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.uri.campushub.model.Event
+import br.com.uri.campushub.repository.EventDataSource
 import br.com.uri.campushub.repository.EventRepository
 import com.google.firebase.Timestamp
 
@@ -23,9 +24,9 @@ enum class EventSituationFilter {
     FINISHED
 }
 
-class EventViewModel : ViewModel() {
-
-    private val repository = EventRepository()
+class EventViewModel(
+    private val repository: EventDataSource = EventRepository()
+) : ViewModel() {
     private var allEvents: List<Event> = emptyList()
     private var searchQuery = ""
     private var selectedCategory: String? = null

@@ -6,8 +6,8 @@ import com.google.firebase.firestore.Query
 
 class EventRepository(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-) {
-    fun getEventById(
+) : EventDataSource {
+    override fun getEventById(
         eventId: String,
         onResult: (Result<Event>) -> Unit
     ) {
@@ -37,7 +37,7 @@ class EventRepository(
             }
     }
 
-    fun getEvents(
+    override fun getEvents(
         onResult: (Result<List<Event>>) -> Unit
     ) {
         firestore.collection("events")
