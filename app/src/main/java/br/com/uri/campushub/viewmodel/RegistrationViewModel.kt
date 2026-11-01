@@ -3,6 +3,7 @@ package br.com.uri.campushub.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import br.com.uri.campushub.repository.RegistrationDataSource
 import br.com.uri.campushub.repository.RegistrationRepository
 
 sealed class RegistrationState {
@@ -20,9 +21,9 @@ sealed class RegistrationState {
     ) : RegistrationState()
 }
 
-class RegistrationViewModel : ViewModel() {
-
-    private val repository = RegistrationRepository()
+class RegistrationViewModel(
+    private val repository: RegistrationDataSource = RegistrationRepository()
+) : ViewModel() {
     private var currentStatus: Boolean? = null
 
     private val _registrationState =

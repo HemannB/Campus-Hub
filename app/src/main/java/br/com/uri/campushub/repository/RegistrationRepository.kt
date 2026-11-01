@@ -7,7 +7,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 class RegistrationRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-) {
+) : RegistrationDataSource {
     fun getRegisteredEventIds(
         onResult: (Result<Set<String>>) -> Unit
     ) {
@@ -40,7 +40,7 @@ class RegistrationRepository(
             }
     }
 
-    fun getRegistrationStatus(
+    override fun getRegistrationStatus(
         eventId: String,
         onResult: (Result<Boolean>) -> Unit
     ) {
@@ -64,7 +64,7 @@ class RegistrationRepository(
             }
     }
 
-    fun register(
+    override fun register(
         eventId: String,
         onResult: (Result<Unit>) -> Unit
     ) {
@@ -115,7 +115,7 @@ class RegistrationRepository(
         }
     }
 
-    fun cancel(
+    override fun cancel(
         eventId: String,
         onResult: (Result<Unit>) -> Unit
     ) {
