@@ -4,7 +4,10 @@ import com.google.firebase.auth.FirebaseAuth
 
 class AuthRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-) : AuthDataSource, PasswordResetDataSource, CurrentUserDataSource {
+) : AuthDataSource,
+    PasswordResetDataSource,
+    CurrentUserDataSource,
+    AccountRegistrationDataSource {
     override fun isLoggedIn(): Boolean {
         return auth.currentUser != null
     }
@@ -46,7 +49,7 @@ class AuthRepository(
             }
     }
 
-    fun register(
+    override fun register(
         email: String,
         password: String,
         onResult: (Result<String>) -> Unit
@@ -77,7 +80,7 @@ class AuthRepository(
         return auth.currentUser?.uid
     }
 
-    fun rollbackRegistration(onComplete: () -> Unit) {
+    override fun rollbackRegistration(onComplete: () -> Unit) {
         val currentUser = auth.currentUser
 
         if (currentUser == null) {

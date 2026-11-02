@@ -4,7 +4,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.uri.campushub.model.User
+import br.com.uri.campushub.repository.AccountRegistrationDataSource
 import br.com.uri.campushub.repository.AuthRepository
+import br.com.uri.campushub.repository.UserDataSource
 import br.com.uri.campushub.repository.UserRepository
 
 sealed class RegisterState {
@@ -14,10 +16,10 @@ sealed class RegisterState {
     data class Error(val message: String) : RegisterState()
 }
 
-class RegisterViewModel : ViewModel() {
-
-    private val authRepository = AuthRepository()
-    private val userRepository = UserRepository()
+class RegisterViewModel(
+    private val authRepository: AccountRegistrationDataSource = AuthRepository(),
+    private val userRepository: UserDataSource = UserRepository()
+) : ViewModel() {
 
     private val _registerState = MutableLiveData<RegisterState>(RegisterState.Idle)
     val registerState: LiveData<RegisterState> = _registerState
