@@ -3,13 +3,15 @@ package br.com.uri.campushub.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import br.com.uri.campushub.repository.EventDataSource
 import br.com.uri.campushub.repository.EventRepository
+import br.com.uri.campushub.repository.FavoriteEventIdsDataSource
 import br.com.uri.campushub.repository.FavoriteRepository
 
-class MyFavoritesViewModel : ViewModel() {
-
-    private val favoriteRepository = FavoriteRepository()
-    private val eventRepository = EventRepository()
+class MyFavoritesViewModel(
+    private val favoriteRepository: FavoriteEventIdsDataSource = FavoriteRepository(),
+    private val eventRepository: EventDataSource = EventRepository()
+) : ViewModel() {
 
     private val _eventState = MutableLiveData<EventState>(EventState.Idle)
     val eventState: LiveData<EventState> = _eventState

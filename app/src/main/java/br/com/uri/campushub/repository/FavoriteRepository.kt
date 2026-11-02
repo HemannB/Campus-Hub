@@ -7,8 +7,8 @@ import com.google.firebase.firestore.FieldValue
 class FavoriteRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-) : FavoriteDataSource {
-    fun getFavoriteEventIds(
+) : FavoriteDataSource, FavoriteEventIdsDataSource {
+    override fun getFavoriteEventIds(
         onResult: (Result<Set<String>>) -> Unit
     ) {
         val userId = auth.currentUser?.uid
