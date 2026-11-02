@@ -5,7 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.uri.campushub.model.Comment
 import br.com.uri.campushub.repository.AuthRepository
+import br.com.uri.campushub.repository.CommentDataSource
 import br.com.uri.campushub.repository.CommentRepository
+import br.com.uri.campushub.repository.CurrentUserDataSource
+import br.com.uri.campushub.repository.UserDataSource
 import br.com.uri.campushub.repository.UserRepository
 
 sealed class CommentListState {
@@ -22,11 +25,11 @@ sealed class CommentActionState {
     data class Error(val message: String) : CommentActionState()
 }
 
-class CommentViewModel : ViewModel() {
-
-    private val authRepository = AuthRepository()
-    private val commentRepository = CommentRepository()
-    private val userRepository = UserRepository()
+class CommentViewModel(
+    private val authRepository: CurrentUserDataSource = AuthRepository(),
+    private val commentRepository: CommentDataSource = CommentRepository(),
+    private val userRepository: UserDataSource = UserRepository()
+) : ViewModel() {
 
     private val _commentListState =
         MutableLiveData<CommentListState>(CommentListState.Idle)

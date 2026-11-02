@@ -8,8 +8,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 class CommentRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-) {
-    fun getComments(
+) : CommentDataSource {
+    override fun getComments(
         eventId: String,
         onResult: (Result<List<Comment>>) -> Unit
     ) {
@@ -38,7 +38,7 @@ class CommentRepository(
             }
     }
 
-    fun createComment(
+    override fun createComment(
         eventId: String,
         authorName: String,
         text: String,
@@ -72,7 +72,7 @@ class CommentRepository(
             }
     }
 
-    fun updateComment(
+    override fun updateComment(
         commentId: String,
         text: String,
         onResult: (Result<Unit>) -> Unit
@@ -123,7 +123,7 @@ class CommentRepository(
         }
     }
 
-    fun deleteComment(
+    override fun deleteComment(
         commentId: String,
         onResult: (Result<Unit>) -> Unit
     ) {
