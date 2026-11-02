@@ -5,6 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.uri.campushub.model.User
 import br.com.uri.campushub.repository.AuthRepository
+import br.com.uri.campushub.repository.CurrentUserDataSource
+import br.com.uri.campushub.repository.UserDataSource
 import br.com.uri.campushub.repository.UserRepository
 
 sealed class ProfileState {
@@ -14,9 +16,10 @@ sealed class ProfileState {
     data class Error(val message: String) : ProfileState()
 }
 
-class ProfileViewModel : ViewModel() {
-    private val authRepository = AuthRepository()
-    private val userRepository = UserRepository()
+class ProfileViewModel(
+    private val authRepository: CurrentUserDataSource = AuthRepository(),
+    private val userRepository: UserDataSource = UserRepository()
+) : ViewModel() {
 
     private val _profileState =
         MutableLiveData<ProfileState>(ProfileState.Idle)

@@ -5,6 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.uri.campushub.model.User
 import br.com.uri.campushub.repository.AuthRepository
+import br.com.uri.campushub.repository.CurrentUserDataSource
+import br.com.uri.campushub.repository.UserDataSource
 import br.com.uri.campushub.repository.UserRepository
 
 sealed class EditProfileState {
@@ -16,10 +18,10 @@ sealed class EditProfileState {
     data class Error(val message: String) : EditProfileState()
 }
 
-class EditProfileViewModel : ViewModel() {
-
-    private val authRepository = AuthRepository()
-    private val userRepository = UserRepository()
+class EditProfileViewModel(
+    private val authRepository: CurrentUserDataSource = AuthRepository(),
+    private val userRepository: UserDataSource = UserRepository()
+) : ViewModel() {
     private var currentUser: User? = null
 
     private val _editProfileState =

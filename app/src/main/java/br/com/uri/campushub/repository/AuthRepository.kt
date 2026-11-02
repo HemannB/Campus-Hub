@@ -4,7 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 
 class AuthRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-) : AuthDataSource, PasswordResetDataSource {
+) : AuthDataSource, PasswordResetDataSource, CurrentUserDataSource {
     override fun isLoggedIn(): Boolean {
         return auth.currentUser != null
     }
@@ -73,7 +73,7 @@ class AuthRepository(
             }
     }
 
-    fun currentUserId(): String? {
+    override fun currentUserId(): String? {
         return auth.currentUser?.uid
     }
 

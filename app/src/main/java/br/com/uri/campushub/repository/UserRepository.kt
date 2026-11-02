@@ -5,8 +5,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 class UserRepository(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-) {
-    fun updateProfile(
+) : UserDataSource {
+    override fun updateProfile(
         userId: String,
         name: String,
         studentId: String,
@@ -35,7 +35,7 @@ class UserRepository(
             }
     }
 
-    fun createProfile(
+    override fun createProfile(
         user: User,
         onResult: (Result<Unit>) -> Unit
     ) {
@@ -53,7 +53,7 @@ class UserRepository(
             }
     }
 
-    fun getProfile(
+    override fun getProfile(
         userId: String,
         onResult: (Result<User>) -> Unit
     ) {
