@@ -7,7 +7,7 @@ import com.google.firebase.firestore.FieldValue
 class FavoriteRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-) {
+) : FavoriteDataSource {
     fun getFavoriteEventIds(
         onResult: (Result<Set<String>>) -> Unit
     ) {
@@ -40,7 +40,7 @@ class FavoriteRepository(
             }
     }
 
-    fun getFavoriteStatus(
+    override fun getFavoriteStatus(
         eventId: String,
         onResult: (Result<Boolean>) -> Unit
     ) {
@@ -65,7 +65,7 @@ class FavoriteRepository(
             }
     }
 
-    fun favorite(
+    override fun favorite(
         eventId: String,
         onResult: (Result<Unit>) -> Unit
     ) {
@@ -96,7 +96,7 @@ class FavoriteRepository(
             }
     }
 
-    fun unfavorite(
+    override fun unfavorite(
         eventId: String,
         onResult: (Result<Unit>) -> Unit
     ) {

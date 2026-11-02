@@ -3,6 +3,7 @@ package br.com.uri.campushub.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import br.com.uri.campushub.repository.FavoriteDataSource
 import br.com.uri.campushub.repository.FavoriteRepository
 
 sealed class FavoriteState {
@@ -20,9 +21,9 @@ sealed class FavoriteState {
     ) : FavoriteState()
 }
 
-class FavoriteViewModel : ViewModel() {
-
-    private val repository = FavoriteRepository()
+class FavoriteViewModel(
+    private val repository: FavoriteDataSource = FavoriteRepository()
+) : ViewModel() {
     private var currentStatus: Boolean? = null
 
     private val _favoriteState =
