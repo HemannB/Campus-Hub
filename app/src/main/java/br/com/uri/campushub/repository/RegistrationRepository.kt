@@ -7,8 +7,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 class RegistrationRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-) : RegistrationDataSource {
-    fun getRegisteredEventIds(
+) : RegistrationDataSource, RegisteredEventIdsDataSource {
+    override fun getRegisteredEventIds(
         onResult: (Result<Set<String>>) -> Unit
     ) {
         val userId = auth.currentUser?.uid
