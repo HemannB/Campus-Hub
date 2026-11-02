@@ -83,4 +83,19 @@ class EditProfileViewModelTest {
 
         assertSame(EditProfileState.Success, viewModel.editProfileState.value)
     }
+
+    @Test
+    fun `update profile failure exposes repository message`() {
+        val user = User(id = "user-1", name = "Nome antigo")
+        viewModel.loadProfile()
+        userRepository.completeProfile(Result.success(user))
+
+        viewModel.updateProfile("Bruno", "123", "Computação", "6")
+        userRepository.completeUpdate(Result.failure(Exception("Falha ao atualizar.")))
+
+        assertEquals(
+            EditProfileState.Error("Falha ao atualizar."),
+            viewModel.editProfileState.value
+        )
+    }
 }

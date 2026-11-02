@@ -83,6 +83,15 @@ class FavoriteViewModelTest {
         )
     }
 
+    @Test
+    fun `toggle before status load does nothing`() {
+        viewModel.toggleFavorite("event-1")
+
+        assertSame(FavoriteState.Idle, viewModel.favoriteState.value)
+        assertEquals(null, repository.favoritedEventId)
+        assertEquals(null, repository.unfavoritedEventId)
+    }
+
     private fun loadStatus(isFavorite: Boolean) {
         viewModel.loadStatus("event-1")
         repository.completeStatus(Result.success(isFavorite))

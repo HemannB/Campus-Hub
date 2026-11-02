@@ -68,6 +68,15 @@ class AuthViewModelTest {
         assertTrue(repository.logoutCalled)
     }
 
+    @Test
+    fun `reset state returns to idle`() {
+        viewModel.login("aluno@uri.edu.br", "123456")
+
+        viewModel.resetState()
+
+        assertSame(AuthState.Idle, viewModel.authState.value)
+    }
+
     private class FakeAuthDataSource : AuthDataSource {
         var loggedIn = false
         var logoutCalled = false

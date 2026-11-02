@@ -38,6 +38,18 @@ class RatingViewModelTest {
     }
 
     @Test
+    fun `load summary failure exposes repository message`() {
+        viewModel.loadRatingSummary("event-1")
+
+        repository.completeSummary(Result.failure(Exception("Avaliações indisponíveis.")))
+
+        assertEquals(
+            RatingSummaryState.Error("Avaliações indisponíveis."),
+            viewModel.summaryState.value
+        )
+    }
+
+    @Test
     fun `invalid score is rejected without repository call`() {
         viewModel.saveRating("event-1", 0)
         assertEquals(
@@ -92,6 +104,10 @@ class RatingViewModelTest {
         val state = viewModel.actionState.value as RatingActionState.Error
         assertEquals("Falha ao salvar.", state.message)
         assertEquals(1, repository.saveCalls)
+
+        viewModel.clearActionState()
+
+        assertSame(RatingActionState.Idle, viewModel.actionState.value)
     }
 
     private class FakeRatingDataSource : RatingDataSource {

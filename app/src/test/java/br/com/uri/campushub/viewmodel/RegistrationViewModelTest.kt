@@ -83,6 +83,15 @@ class RegistrationViewModelTest {
         )
     }
 
+    @Test
+    fun `toggle before status load does nothing`() {
+        viewModel.toggleRegistration("event-1")
+
+        assertSame(RegistrationState.Idle, viewModel.registrationState.value)
+        assertEquals(null, repository.registeredEventId)
+        assertEquals(null, repository.cancelledEventId)
+    }
+
     private fun loadStatus(isRegistered: Boolean) {
         viewModel.loadStatus("event-1")
         repository.completeStatus(Result.success(isRegistered))
