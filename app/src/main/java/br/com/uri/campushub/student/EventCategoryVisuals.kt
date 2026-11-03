@@ -1,6 +1,5 @@
 package br.com.uri.campushub.student
 
-import android.graphics.Color
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import br.com.uri.campushub.R
@@ -19,8 +18,8 @@ object EventCategoryVisuals {
                 category.contains("career", ignoreCase = true) ->
                 EventCategoryStyle(
                     imageRes = R.drawable.event_default_career,
-                    backgroundColor = Color.parseColor("#DFF7F1"),
-                    textColor = Color.parseColor("#08776D")
+                    backgroundColor = 0xFFDFF7F1.toInt(),
+                    textColor = 0xFF08776D.toInt()
                 )
 
             category.contains("cultura", ignoreCase = true) ||
@@ -28,30 +27,30 @@ object EventCategoryVisuals {
                 category.contains("musica", ignoreCase = true) ->
                 EventCategoryStyle(
                     imageRes = R.drawable.event_default_culture,
-                    backgroundColor = Color.parseColor("#F1E8FF"),
-                    textColor = Color.parseColor("#6C2BD9")
+                    backgroundColor = 0xFFF1E8FF.toInt(),
+                    textColor = 0xFF6C2BD9.toInt()
                 )
 
             category.contains("esporte", ignoreCase = true) ||
                 category.contains("sport", ignoreCase = true) ->
                 EventCategoryStyle(
                     imageRes = R.drawable.event_default_sports,
-                    backgroundColor = Color.parseColor("#E5F5E9"),
-                    textColor = Color.parseColor("#237A40")
+                    backgroundColor = 0xFFE5F5E9.toInt(),
+                    textColor = 0xFF237A40.toInt()
                 )
 
             category.contains("tecnologia", ignoreCase = true) ||
                 category.contains("tech", ignoreCase = true) ->
                 EventCategoryStyle(
                     imageRes = R.drawable.event_default_technology,
-                    backgroundColor = Color.parseColor("#E8F0FF"),
-                    textColor = Color.parseColor("#1557D6")
+                    backgroundColor = 0xFFE8F0FF.toInt(),
+                    textColor = 0xFF1557D6.toInt()
                 )
 
             else -> EventCategoryStyle(
                 imageRes = R.drawable.event_default_technology,
-                backgroundColor = Color.parseColor("#EEF2F8"),
-                textColor = Color.parseColor("#475467")
+                backgroundColor = 0xFFEEF2F8.toInt(),
+                textColor = 0xFF475467.toInt()
             )
         }
     }
