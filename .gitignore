@@ -17,3 +17,7 @@
 .cxx
 local.properties
 /secrets.properties
+/.firebase/
+/firebase-debug.log
+/firestore-debug.log
+/ui-debug.log
