@@ -84,6 +84,33 @@ class CommentViewModelTest {
     }
 
     @Test
+    fun `create comment exposes profile loading failure`() {
+        viewModel.createComment("event-1", "Comentário")
+
+        userRepository.completeProfile(Result.failure(Exception("Perfil indisponível.")))
+
+        assertEquals(
+            CommentActionState.Error("Perfil indisponível."),
+            viewModel.commentActionState.value
+        )
+        assertEquals(null, commentRepository.createRequest)
+    }
+
+    @Test
+    fun `create comment failure does not reload list`() {
+        viewModel.createComment("event-1", "Comentário")
+        userRepository.completeProfile(Result.success(User(id = "user-1", name = "Bruno")))
+
+        commentRepository.completeAction(Result.failure(Exception("Publicação negada.")))
+
+        assertEquals(
+            CommentActionState.Error("Publicação negada."),
+            viewModel.commentActionState.value
+        )
+        assertEquals(null, commentRepository.commentsEventId)
+    }
+
+    @Test
     fun `update comment succeeds and reloads list`() {
         viewModel.updateComment("event-1", "comment-1", "Texto atualizado")
 

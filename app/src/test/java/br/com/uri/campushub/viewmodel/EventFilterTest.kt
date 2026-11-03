@@ -64,6 +64,21 @@ class EventFilterTest {
     }
 
     @Test
+    fun `event without end date is upcoming and blank category is ignored`() {
+        val eventWithoutEnd = Event(id = "4", title = "Evento sem encerramento")
+
+        val result = EventFilter.apply(
+            events = listOf(eventWithoutEnd),
+            searchQuery = "",
+            category = "   ",
+            situation = EventSituationFilter.UPCOMING,
+            now = now
+        )
+
+        assertEquals(listOf(eventWithoutEnd), result)
+    }
+
+    @Test
     fun `categories are trimmed unique and sorted`() {
         val source = listOf(
             Event(category = " Tecnologia "),

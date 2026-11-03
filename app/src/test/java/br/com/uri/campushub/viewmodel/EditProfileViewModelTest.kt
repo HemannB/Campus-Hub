@@ -49,6 +49,18 @@ class EditProfileViewModelTest {
     }
 
     @Test
+    fun `load profile failure exposes repository message`() {
+        viewModel.loadProfile()
+
+        userRepository.completeProfile(Result.failure(Exception("Perfil indisponível.")))
+
+        assertEquals(
+            EditProfileState.Error("Perfil indisponível."),
+            viewModel.editProfileState.value
+        )
+    }
+
+    @Test
     fun `update profile requires loaded user`() {
         viewModel.updateProfile("Bruno", "123", "Computação", "6")
 

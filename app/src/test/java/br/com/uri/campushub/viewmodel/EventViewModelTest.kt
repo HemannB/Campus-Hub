@@ -82,6 +82,22 @@ class EventViewModelTest {
     }
 
     @Test
+    fun `filters configured before loading are applied after success`() {
+        viewModel.setSearchQuery("kotlin")
+        viewModel.setCategory("Tecnologia")
+
+        assertSame(EventState.Idle, viewModel.eventState.value)
+
+        viewModel.loadEvents()
+        repository.completeEvents(Result.success(events))
+
+        assertEquals(
+            EventState.Success(listOf(events[1]), isFiltered = true),
+            viewModel.eventState.value
+        )
+    }
+
+    @Test
     fun `reload clears category that is no longer available`() {
         viewModel.loadEvents()
         repository.completeEvents(Result.success(events))
