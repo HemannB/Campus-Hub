@@ -1,0 +1,137 @@
+appId: br.com.uri.campushub
+name: Cadastro, perfil, logout e login
+tags:
+  - e2e
+  - auth
+---
+- evalScript: '${output.user = {email: "campushub.auth." + Date.now() + "." + Math.floor(Math.random() * 10000) + "@example.com", password: "123456"}}'
+- launchApp:
+    clearState: true
+- assertVisible: "Bem Vindo ao CampusHUB"
+- tapOn:
+    id: ".*buttonRegister"
+- assertVisible: "Crie sua conta"
+- tapOn:
+    id: ".*inputName"
+- inputText: "Aluno E2E"
+- waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "Using Google Translate"
+    commands:
+      - tapOn: "OK"
+- tapOn:
+    id: ".*inputEmail"
+- inputText: ${output.user.email}
+- tapOn:
+    id: ".*inputStudentId"
+- inputText: "20260001"
+- tapOn:
+    id: ".*input_method_nav_back"
+- scrollUntilVisible:
+    element:
+      id: ".*inputCourse"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: ".*inputCourse"
+- inputText: "Computacao"
+- runFlow:
+    when:
+      visible: "Using Google Translate"
+    commands:
+      - tapOn: "OK"
+      - tapOn:
+          id: ".*inputCourse"
+      - inputText: "Computacao"
+- tapOn:
+    id: ".*input_method_nav_back"
+- scrollUntilVisible:
+    element:
+      id: ".*inputPassword"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: ".*inputPassword"
+- inputText: ${output.user.password}
+- tapOn:
+    id: ".*input_method_nav_back"
+- scrollUntilVisible:
+    element:
+      id: ".*inputConfirmPassword"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: ".*inputConfirmPassword"
+- inputText: ${output.user.password}
+- tapOn:
+    id: ".*input_method_nav_back"
+- scrollUntilVisible:
+    element:
+      id: ".*buttonRegister"
+    direction: DOWN
+- tapOn:
+    id: ".*buttonRegister"
+- extendedWaitUntil:
+    visible:
+      id: ".*buttonProfile"
+    timeout: 30000
+- tapOn:
+    id: ".*buttonProfile"
+- extendedWaitUntil:
+    visible: "Meu perfil"
+    timeout: 15000
+- assertVisible: ${output.user.email}
+- tapOn:
+    id: ".*buttonEditProfile"
+- extendedWaitUntil:
+    visible: "Editar perfil"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: ".*inputEditSemester"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: ".*inputEditSemester"
+- inputText: "6"
+- tapOn:
+    id: ".*input_method_nav_back"
+- scrollUntilVisible:
+    element:
+      id: ".*buttonSaveProfile"
+    direction: DOWN
+- tapOn:
+    id: ".*buttonSaveProfile"
+- extendedWaitUntil:
+    visible: "Meu perfil"
+    timeout: 20000
+- assertVisible:
+    id: ".*textSemester"
+    text: "6"
+- scrollUntilVisible:
+    element:
+      id: ".*buttonLogout"
+    direction: DOWN
+- tapOn:
+    id: ".*buttonLogout"
+- extendedWaitUntil:
+    visible: "Bem Vindo ao CampusHUB"
+    timeout: 15000
+- tapOn:
+    id: ".*buttonLogin"
+- assertVisible: "Bem vindo de volta!"
+- tapOn:
+    id: ".*inputEmail"
+- inputText: ${output.user.email}
+- tapOn:
+    id: ".*inputPassword"
+- inputText: ${output.user.password}
+- tapOn:
+    id: ".*input_method_nav_back"
+- tapOn:
+    id: ".*buttonLogin"
+- extendedWaitUntil:
+    visible:
+      id: ".*buttonProfile"
+    timeout: 30000

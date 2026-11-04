@@ -1,0 +1,137 @@
+appId: br.com.uri.campushub
+name: Favoritar e consultar evento favorito
+tags:
+  - e2e
+  - events
+---
+- evalScript: '${output.user = {email: "campushub.events." + Date.now() + "." + Math.floor(Math.random() * 10000) + "@example.com", password: "123456"}}'
+- launchApp:
+    clearState: true
+- tapOn:
+    id: ".*buttonRegister"
+- assertVisible: "Crie sua conta"
+- tapOn:
+    id: ".*inputName"
+- inputText: "Aluno Eventos"
+- waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "Using Google Translate"
+    commands:
+      - tapOn: "OK"
+- tapOn:
+    id: ".*inputEmail"
+- inputText: ${output.user.email}
+- tapOn:
+    id: ".*inputStudentId"
+- inputText: "20260002"
+- tapOn:
+    id: ".*input_method_nav_back"
+- scrollUntilVisible:
+    element:
+      id: ".*inputCourse"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: ".*inputCourse"
+- inputText: "Computacao"
+- runFlow:
+    when:
+      visible: "Using Google Translate"
+    commands:
+      - tapOn: "OK"
+      - tapOn:
+          id: ".*inputCourse"
+      - inputText: "Computacao"
+- tapOn:
+    id: ".*input_method_nav_back"
+- scrollUntilVisible:
+    element:
+      id: ".*inputPassword"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: ".*inputPassword"
+- inputText: ${output.user.password}
+- tapOn:
+    id: ".*input_method_nav_back"
+- scrollUntilVisible:
+    element:
+      id: ".*inputConfirmPassword"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: ".*inputConfirmPassword"
+- inputText: ${output.user.password}
+- tapOn:
+    id: ".*input_method_nav_back"
+- scrollUntilVisible:
+    element:
+      id: ".*buttonRegister"
+    direction: DOWN
+- tapOn:
+    id: ".*buttonRegister"
+- extendedWaitUntil:
+    visible:
+      id: ".*textViewDetails"
+    timeout: 30000
+- copyTextFrom:
+    id: ".*textEventTitle"
+    index: 0
+- evalScript: '${output.eventTitle = maestro.copiedText}'
+- tapOn:
+    id: ".*textViewDetails"
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: ".*textDetailTitle"
+    timeout: 20000
+- assertVisible: ${output.eventTitle}
+- scrollUntilVisible:
+    element:
+      id: ".*buttonFavorite"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: ".*buttonFavorite"
+- extendedWaitUntil:
+    visible: "Remover dos favoritos"
+    timeout: 15000
+- back
+- extendedWaitUntil:
+    visible: "Buscar por título"
+    timeout: 15000
+- tapOn:
+    id: ".*buttonProfile"
+- extendedWaitUntil:
+    visible: "Meu perfil"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: ".*buttonMyFavorites"
+    direction: DOWN
+- tapOn:
+    id: ".*buttonMyFavorites"
+- extendedWaitUntil:
+    visible: "Meus favoritos"
+    timeout: 15000
+- extendedWaitUntil:
+    visible: ${output.eventTitle}
+    timeout: 20000
+- tapOn:
+    id: ".*textViewDetails"
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: ".*textDetailTitle"
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      id: ".*buttonFavorite"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: ".*buttonFavorite"
+- extendedWaitUntil:
+    visible: "Favoritar evento"
+    timeout: 15000
