@@ -15,7 +15,7 @@ import java.util.UUID
 class PublicationRepository(
     context: Context,
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-) {
+) : PublicationDataSource {
     companion object {
         private const val PREFERENCES_NAME = "event_publications"
         private const val PUBLICATIONS_KEY = "publications"
@@ -29,7 +29,7 @@ class PublicationRepository(
         Context.MODE_PRIVATE
     )
 
-    fun getPublications(eventId: String): Result<List<EventPublication>> = runCatching {
+    override fun getPublications(eventId: String): Result<List<EventPublication>> = runCatching {
         require(eventId.isNotBlank()) { "Evento inválido." }
 
         readAll()
@@ -37,7 +37,7 @@ class PublicationRepository(
             .sortedByDescending { publication -> publication.createdAt }
     }
 
-    fun publishFromUri(
+    override fun publishFromUri(
         eventId: String,
         authorName: String,
         type: PublicationType,
@@ -77,7 +77,7 @@ class PublicationRepository(
         }
     }
 
-    fun deletePublication(publicationId: String): Result<Unit> = runCatching {
+    override fun deletePublication(publicationId: String): Result<Unit> = runCatching {
         val userId = requireAuthenticatedUser()
         val publications = readAll()
         val publication = publications.firstOrNull { item -> item.id == publicationId }

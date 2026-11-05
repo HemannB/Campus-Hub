@@ -8,8 +8,12 @@ import androidx.lifecycle.MutableLiveData
 import br.com.uri.campushub.model.EventPublication
 import br.com.uri.campushub.model.PublicationType
 import br.com.uri.campushub.repository.AuthRepository
+import br.com.uri.campushub.repository.CurrentUserDataSource
+import br.com.uri.campushub.repository.PublicationDataSource
 import br.com.uri.campushub.repository.PublicationRepository
+import br.com.uri.campushub.repository.UserDataSource
 import br.com.uri.campushub.repository.UserRepository
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 sealed class PublicationListState {
@@ -26,11 +30,13 @@ sealed class PublicationActionState {
     data class Error(val message: String) : PublicationActionState()
 }
 
-class PublicationViewModel(application: Application) : AndroidViewModel(application) {
-    private val authRepository = AuthRepository()
-    private val userRepository = UserRepository()
-    private val publicationRepository = PublicationRepository(application)
-    private val fileExecutor = Executors.newSingleThreadExecutor()
+class PublicationViewModel @JvmOverloads constructor(
+    application: Application,
+    private val authRepository: CurrentUserDataSource = AuthRepository(),
+    private val userRepository: UserDataSource = UserRepository(),
+    private val publicationRepository: PublicationDataSource = PublicationRepository(application),
+    private val fileExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+) : AndroidViewModel(application) {
 
     private val _listState = MutableLiveData<PublicationListState>(PublicationListState.Idle)
     val listState: LiveData<PublicationListState> = _listState
