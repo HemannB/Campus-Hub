@@ -28,4 +28,16 @@ class DomainStatusTest {
         assertEquals(RegistrationStatus.CONFIRMED, RegistrationStatus.from(null))
         assertEquals(RegistrationStatus.CONFIRMED, RegistrationStatus.from("UNKNOWN"))
     }
+
+    @Test
+    fun `models expose typed role and event status`() {
+        val organizer = User(role = "ORGANIZER")
+        val draft = Event(organizerId = "organizer-1", status = "DRAFT")
+        val legacyEvent = Event()
+
+        assertEquals(UserRole.ORGANIZER, organizer.userRole)
+        assertEquals("organizer-1", draft.organizerId)
+        assertEquals(EventStatus.DRAFT, draft.eventStatus)
+        assertEquals(EventStatus.PUBLISHED, legacyEvent.eventStatus)
+    }
 }
