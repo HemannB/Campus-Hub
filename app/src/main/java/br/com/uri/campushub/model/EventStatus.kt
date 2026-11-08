@@ -13,3 +13,6 @@ enum class EventStatus {
         }
     }
 }
+
+val Event.eventStatus: EventStatus
+    get() = EventStatus.from(status)

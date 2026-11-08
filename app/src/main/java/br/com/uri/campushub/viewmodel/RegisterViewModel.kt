@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.uri.campushub.model.User
+import br.com.uri.campushub.model.UserRole
 import br.com.uri.campushub.repository.AccountRegistrationDataSource
 import br.com.uri.campushub.repository.AuthRepository
 import br.com.uri.campushub.repository.UserDataSource
@@ -43,7 +44,7 @@ class RegisterViewModel(
                             email = email,
                             studentId = studentId,
                             course = course,
-                            role = "STUDENT"
+                            role = UserRole.STUDENT.name
                         )
                     )
                 },

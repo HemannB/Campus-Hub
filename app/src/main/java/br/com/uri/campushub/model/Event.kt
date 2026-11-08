@@ -13,5 +13,7 @@ data class Event(
     val imageUrl: String = "",
     val maxParticipants: Int = 0,
     val participantCount: Int = 0,
-    val organizer: String = ""
+    val organizer: String = "",
+    val organizerId: String = "",
+    val status: String = EventStatus.PUBLISHED.name
 )

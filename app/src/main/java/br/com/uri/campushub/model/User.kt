@@ -8,5 +8,5 @@ data class User(
     val course: String = "",
     val semester: String = "",
     val photoUrl: String = "",
-    val role: String = "STUDENT"
+    val role: String = UserRole.STUDENT.name
 )

@@ -12,3 +12,6 @@ enum class UserRole {
         }
     }
 }
+
+val User.userRole: UserRole
+    get() = UserRole.from(role)
