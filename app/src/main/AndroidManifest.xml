@@ -30,6 +30,11 @@
         </provider>
 
         <activity
+            android:name=".organizer.OrganizerHomeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CampusHUB.Home" />
+
+        <activity
             android:name=".student.EditProfileActivity"
             android:exported="false" />
 
