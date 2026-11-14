@@ -80,42 +80,42 @@
             android:textColor="#667085"
             android:textSize="16sp" />
 
-        <com.google.android.material.card.MaterialCardView
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonRefreshEvents"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="24dp"
+            android:text="Atualizar eventos"
+            android:textAllCaps="false"
+            android:textColor="#1557D6"
+            app:cornerRadius="18dp"
+            app:strokeColor="#D8E1F0" />
+
+        <ProgressBar
+            android:id="@+id/progressEvents"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/textEventsMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            app:cardBackgroundColor="#FFFFFF"
-            app:cardCornerRadius="22dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#E3E9F3"
-            app:strokeWidth="1dp">
+            android:layout_marginTop="24dp"
+            android:textColor="#667085"
+            android:textSize="16sp"
+            android:visibility="gone" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Painel em construção"
-                    android:textColor="#071A45"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:lineSpacingExtra="3dp"
-                    android:text="No próximo passo, esta tela receberá a lista dos eventos sob sua responsabilidade."
-                    android:textColor="#667085"
-                    android:textSize="15sp" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerOrganizerEvents"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:nestedScrollingEnabled="false"
+            android:visibility="gone" />
 
     </LinearLayout>
 
