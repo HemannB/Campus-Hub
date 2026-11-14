@@ -8,14 +8,19 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import br.com.uri.campushub.databinding.ActivityLoginBinding
+import br.com.uri.campushub.model.UserRole
+import br.com.uri.campushub.organizer.OrganizerHomeActivity
 import br.com.uri.campushub.student.HomeActivity
 import br.com.uri.campushub.viewmodel.AuthState
 import br.com.uri.campushub.viewmodel.AuthViewModel
+import br.com.uri.campushub.viewmodel.SessionState
+import br.com.uri.campushub.viewmodel.SessionViewModel
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
-    private lateinit var viewModel: AuthViewModel
+    private lateinit var authViewModel: AuthViewModel
+    private lateinit var sessionViewModel: SessionViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,10 +30,12 @@ class LoginActivity : AppCompatActivity() {
         setupViewModel()
         setupListeners()
         observeAuthState()
+        observeSessionState()
     }
 
     private fun setupViewModel() {
-        viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
+        authViewModel = ViewModelProvider(this)[AuthViewModel::class.java]
+        sessionViewModel = ViewModelProvider(this)[SessionViewModel::class.java]
     }
 
     private fun setupListeners() {
@@ -56,13 +63,12 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun observeAuthState() {
-        viewModel.authState.observe(this) { state ->
+        authViewModel.authState.observe(this) { state ->
             when (state) {
                 AuthState.Idle -> setLoading(false)
                 AuthState.Loading -> setLoading(true)
                 AuthState.Success -> {
-                    setLoading(false)
-                    navigateToHome()
+                    sessionViewModel.loadSession()
                 }
                 is AuthState.Error -> {
                     setLoading(false)
@@ -71,14 +77,37 @@ class LoginActivity : AppCompatActivity() {
                         state.message,
                         Toast.LENGTH_LONG
                     ).show()
-                    viewModel.resetState()
+                    authViewModel.resetState()
                 }
             }
         }
     }
 
-    private fun navigateToHome() {
-        val intent = Intent(this, HomeActivity::class.java).apply {
+    private fun observeSessionState() {
+        sessionViewModel.sessionState.observe(this) { state ->
+            when (state) {
+                SessionState.Idle,
+                SessionState.Unauthenticated -> Unit
+                SessionState.Loading -> setLoading(true)
+                is SessionState.Authenticated -> {
+                    setLoading(false)
+                    navigateToHome(state.role)
+                }
+                is SessionState.Error -> {
+                    setLoading(false)
+                    Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun navigateToHome(role: UserRole) {
+        val destination = when (role) {
+            UserRole.STUDENT -> HomeActivity::class.java
+            UserRole.ORGANIZER -> OrganizerHomeActivity::class.java
+        }
+
+        val intent = Intent(this, destination).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         startActivity(intent)
@@ -115,7 +144,7 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        viewModel.login(email, password)
+        authViewModel.login(email, password)
     }
 
     private fun setLoading(isLoading: Boolean) {
