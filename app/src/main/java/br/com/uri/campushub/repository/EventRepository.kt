@@ -6,7 +6,28 @@ import com.google.firebase.firestore.Query
 
 class EventRepository(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-) : EventDataSource {
+) : EventDataSource, OrganizerEventDataSource {
+    override fun getOrganizerEvents(
+        organizerId: String,
+        onResult: (Result<List<Event>>) -> Unit
+    ) {
+        firestore.collection("events")
+            .whereEqualTo("organizerId", organizerId)
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val events = task.result.documents.mapNotNull { document ->
+                        document.toObject(Event::class.java)?.copy(id = document.id)
+                    }
+                    onResult(Result.success(events))
+                } else {
+                    onResult(Result.failure(
+                        task.exception ?: Exception("Não foi possível carregar seus eventos.")
+                    ))
+                }
+            }
+    }
+
     override fun getEventById(
         eventId: String,
         onResult: (Result<Event>) -> Unit
