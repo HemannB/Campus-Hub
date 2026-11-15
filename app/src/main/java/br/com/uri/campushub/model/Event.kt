@@ -15,5 +15,7 @@ data class Event(
     val participantCount: Int = 0,
     val organizer: String = "",
     val organizerId: String = "",
-    val status: String = EventStatus.PUBLISHED.name
+    val status: String = EventStatus.PUBLISHED.name,
+    val waitingUserIds: List<String> = emptyList(),
+    val invitedUserIds: List<String> = emptyList()
 )
