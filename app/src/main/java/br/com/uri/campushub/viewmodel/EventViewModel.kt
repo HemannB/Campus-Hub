@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import br.com.uri.campushub.model.Event
+import br.com.uri.campushub.model.EventStatus
+import br.com.uri.campushub.model.eventStatus
 import br.com.uri.campushub.repository.EventDataSource
 import br.com.uri.campushub.repository.EventRepository
 import com.google.firebase.Timestamp
@@ -52,9 +54,9 @@ class EventViewModel(
         repository.getEvents { result ->
             result.fold(
                 onSuccess = { events ->
-                    allEvents = events
+                    allEvents = events.filter { it.eventStatus != EventStatus.DRAFT }
                     hasLoadedEvents = true
-                    updateCategories(events)
+                    updateCategories(allEvents)
                     applyFilters()
                 },
                 onFailure = { exception ->

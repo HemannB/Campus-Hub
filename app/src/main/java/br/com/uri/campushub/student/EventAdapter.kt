@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import br.com.uri.campushub.databinding.ItemEventBinding
 import br.com.uri.campushub.model.Event
+import br.com.uri.campushub.ui.loadEventImage
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -45,7 +46,7 @@ class EventAdapter(
             binding.textEventCategory.backgroundTintList =
                 ColorStateList.valueOf(categoryStyle.backgroundColor)
             binding.textEventCategory.setTextColor(categoryStyle.textColor)
-            binding.imageEvent.setImageResource(categoryStyle.imageRes)
+            binding.imageEvent.loadEventImage(event.imageUrl, categoryStyle.imageRes)
             binding.imageEvent.contentDescription = "Imagem do evento ${event.title}"
             binding.textEventTitle.text = event.title
             binding.textEventDescription.text = event.description.ifBlank {

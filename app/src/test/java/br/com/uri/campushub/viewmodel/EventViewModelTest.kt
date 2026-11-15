@@ -41,6 +41,17 @@ class EventViewModelTest {
     }
 
     @Test
+    fun `drafts are hidden from student list and category filters`() {
+        val draft = Event(id = "draft", category = "Rascunhos", status = "DRAFT")
+        val ended = Event(id = "ended", category = "Cultura", status = "ENDED")
+        viewModel.loadEvents()
+        repository.completeEvents(Result.success(events + draft + ended))
+
+        assertEquals(EventState.Success(events + ended), viewModel.eventState.value)
+        assertEquals(listOf("Cultura", "Tecnologia"), viewModel.categories.value)
+    }
+
+    @Test
     fun `load events changes from loading to success`() {
         viewModel.loadEvents()
 
