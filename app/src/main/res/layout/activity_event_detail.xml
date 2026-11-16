@@ -42,6 +42,14 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
+            <ImageView
+                android:id="@+id/imageDetailEvent"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:layout_marginTop="16dp"
+                android:contentDescription="Imagem do evento"
+                android:scaleType="centerCrop" />
+
             <TextView
                 android:id="@+id/textDetailTitle"
                 android:layout_width="match_parent"
@@ -328,6 +336,30 @@
                 android:visibility="gone"
                 app:cornerRadius="18dp"
                 app:strokeColor="#1557D6" />
+
+            <TextView
+                android:id="@+id/textEnrollmentStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textColor="#475467" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonConfirmInvitation"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Confirmar minha vaga"
+                android:textAllCaps="false"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonShowTicket"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Ver meu QR Code"
+                android:textAllCaps="false"
+                android:visibility="gone" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonRegistration"

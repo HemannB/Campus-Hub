@@ -91,7 +91,8 @@ class RatingRepository(
                 throw IllegalStateException("Evento não encontrado.")
             }
 
-            if (!registrationSnapshot.exists()) {
+            if (!registrationSnapshot.exists() ||
+                (registrationSnapshot.getString("status") ?: "CONFIRMED") != "CONFIRMED") {
                 throw IllegalStateException(
                     "Somente alunos inscritos podem avaliar este evento."
                 )

@@ -39,8 +39,16 @@ import br.com.uri.campushub.viewmodel.PublicationViewModel
 import br.com.uri.campushub.viewmodel.RatingActionState
 import br.com.uri.campushub.viewmodel.RatingSummaryState
 import br.com.uri.campushub.viewmodel.RatingViewModel
-import br.com.uri.campushub.viewmodel.RegistrationState
-import br.com.uri.campushub.viewmodel.RegistrationViewModel
+import br.com.uri.campushub.viewmodel.EnrollmentState
+import br.com.uri.campushub.model.Registration
+import br.com.uri.campushub.model.RegistrationStatus
+import br.com.uri.campushub.model.registrationStatus
+import br.com.uri.campushub.model.CheckInTicket
+import br.com.uri.campushub.ui.loadEventImage
+import android.widget.ImageView
+import com.google.zxing.BarcodeFormat
+import com.journeyapps.barcodescanner.BarcodeEncoder
+import br.com.uri.campushub.viewmodel.EnrollmentViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.Timestamp
 import java.io.File
@@ -58,7 +66,7 @@ class EventDetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityEventDetailBinding
     private lateinit var eventDetailViewModel: EventDetailViewModel
-    private lateinit var registrationViewModel: RegistrationViewModel
+    private lateinit var registrationViewModel: EnrollmentViewModel
     private lateinit var favoriteViewModel: FavoriteViewModel
     private lateinit var commentViewModel: CommentViewModel
     private lateinit var ratingViewModel: RatingViewModel
@@ -69,6 +77,8 @@ class EventDetailActivity : AppCompatActivity() {
     private var editingCommentId: String? = null
     private var currentEvent: Event? = null
     private var currentRegistrationStatus: Boolean? = null
+    private var currentRegistration: Registration? = null
+    private var enrollmentLoaded = false
     private var currentRatingSummary = RatingSummary()
     private var isRatingSummaryLoaded = false
     private var ratingSummaryError: String? = null
@@ -159,7 +169,7 @@ class EventDetailActivity : AppCompatActivity() {
             showError("Evento inválido.")
         } else {
             eventDetailViewModel.loadEvent(eventId)
-            registrationViewModel.loadStatus(eventId)
+            registrationViewModel.load(eventId)
             favoriteViewModel.loadStatus(eventId)
             commentViewModel.loadComments(eventId)
             ratingViewModel.loadRatingSummary(eventId)
@@ -185,7 +195,7 @@ class EventDetailActivity : AppCompatActivity() {
 
     private fun setupViewModel() {
         eventDetailViewModel = ViewModelProvider(this)[EventDetailViewModel::class.java]
-        registrationViewModel = ViewModelProvider(this)[RegistrationViewModel::class.java]
+        registrationViewModel = ViewModelProvider(this)[EnrollmentViewModel::class.java]
         favoriteViewModel = ViewModelProvider(this)[FavoriteViewModel::class.java]
         commentViewModel = ViewModelProvider(this)[CommentViewModel::class.java]
         ratingViewModel = ViewModelProvider(this)[RatingViewModel::class.java]
@@ -225,7 +235,7 @@ class EventDetailActivity : AppCompatActivity() {
         binding.buttonRetryDetail.setOnClickListener {
             if (eventId.isNotBlank()) {
                 eventDetailViewModel.loadEvent(eventId)
-                registrationViewModel.loadStatus(eventId)
+                registrationViewModel.load(eventId)
                 favoriteViewModel.loadStatus(eventId)
                 commentViewModel.loadComments(eventId)
                 ratingViewModel.loadRatingSummary(eventId)
@@ -234,7 +244,22 @@ class EventDetailActivity : AppCompatActivity() {
         }
 
         binding.buttonRegistration.setOnClickListener {
-            registrationViewModel.toggleRegistration(eventId)
+            when {
+                !enrollmentLoaded -> registrationViewModel.load(eventId)
+                currentRegistration == null -> registrationViewModel.join(eventId)
+                else -> registrationViewModel.cancel(eventId)
+            }
+        }
+
+        binding.buttonConfirmInvitation.setOnClickListener { registrationViewModel.confirm(eventId) }
+        binding.buttonShowTicket.setOnClickListener {
+            val registration = currentRegistration ?: return@setOnClickListener
+            val ticket = CheckInTicket(eventId, registration.id, registration.qrToken).encode()
+            val bitmap = BarcodeEncoder().encodeBitmap(ticket, BarcodeFormat.QR_CODE, 600, 600)
+            val image = ImageView(this).apply { setImageBitmap(bitmap); adjustViewBounds = true }
+            MaterialAlertDialogBuilder(this).setTitle("Seu ingresso")
+                .setMessage("Apresente este QR Code ao organizador.")
+                .setView(image).setPositiveButton("Fechar", null).show()
         }
 
         binding.buttonFavorite.setOnClickListener {
@@ -306,39 +331,34 @@ class EventDetailActivity : AppCompatActivity() {
     }
 
     private fun observeRegistrationState() {
-        registrationViewModel.registrationState.observe(this) { state ->
+        registrationViewModel.state.observe(this) { state ->
+            binding.buttonConfirmInvitation.visibility = View.GONE
+            binding.buttonShowTicket.visibility = View.GONE
             when (state) {
-                RegistrationState.Idle,
-                RegistrationState.Loading -> {
+                EnrollmentState.Loading -> {
+                    enrollmentLoaded = false
                     currentRegistrationStatus = null
-                    binding.buttonRegistration.visibility = View.GONE
-                    renderRatingAvailability()
+                    binding.buttonRegistration.visibility = View.VISIBLE
+                    binding.buttonRegistration.isEnabled = false
+                    binding.buttonRegistration.text = "Carregando inscrição..."
                 }
-
-                is RegistrationState.Status -> {
-                    renderRegistrationButton(state.isRegistered)
-                }
-
-                is RegistrationState.Updating -> {
-                    showRegistrationLoading(state.isRegistered)
-                }
-
-                is RegistrationState.Success -> {
-                    renderRegistrationButton(state.isRegistered)
-                    Toast.makeText(this, state.message, Toast.LENGTH_SHORT).show()
+                is EnrollmentState.Ready -> {
+                    enrollmentLoaded = true
+                    currentRegistration = state.registration
+                    renderRegistrationButton(state.registration?.registrationStatus == RegistrationStatus.CONFIRMED)
                     eventDetailViewModel.loadEvent(eventId)
                 }
-
-                is RegistrationState.Error -> {
-                    state.isRegistered?.let(::renderRegistrationButton)
-                        ?: run {
-                            currentRegistrationStatus = null
-                            binding.buttonRegistration.visibility = View.GONE
-                            renderRatingAvailability()
-                        }
+                is EnrollmentState.Error -> {
+                    enrollmentLoaded = false
+                    currentRegistrationStatus = null
+                    binding.buttonRegistration.visibility = View.VISIBLE
+                    binding.buttonRegistration.isEnabled = true
+                    binding.buttonRegistration.text = "Tentar novamente"
+                    binding.textEnrollmentStatus.text = state.message
                     Toast.makeText(this, state.message, Toast.LENGTH_LONG).show()
                 }
             }
+            renderRatingAvailability()
         }
     }
 
@@ -994,6 +1014,7 @@ class EventDetailActivity : AppCompatActivity() {
 
         binding.textDetailCategory.text = event.category.ifBlank { "Evento" }
         binding.textDetailTitle.text = event.title
+        binding.imageDetailEvent.loadEventImage(event.imageUrl, EventCategoryVisuals.resolve(event.category).imageRes)
         binding.textDetailDescription.text = event.description.ifBlank { "Evento sem descrição." }
         binding.textDetailStart.text = formatDate(event.startAt)
         binding.textDetailEnd.text = formatDate(event.endAt)
@@ -1018,28 +1039,32 @@ class EventDetailActivity : AppCompatActivity() {
     private fun renderRegistrationButton(isRegistered: Boolean) {
         currentRegistrationStatus = isRegistered
         renderRatingAvailability()
-
         val event = currentEvent ?: return
-        val isFull = event.maxParticipants > 0 &&
-            event.participantCount >= event.maxParticipants
-
+        val registration = currentRegistration
+        val status = registration?.registrationStatus
+        val closed = isEventFinished(event) || event.status == "ENDED"
+        val full = event.maxParticipants > 0 &&
+            event.participantCount + event.invitedUserIds.size >= event.maxParticipants
         binding.buttonRegistration.visibility = View.VISIBLE
-        binding.buttonRegistration.isEnabled = isRegistered || !isFull
+        binding.buttonRegistration.isEnabled = registration?.checkedInAt == null && (registration != null || !closed)
         binding.buttonRegistration.text = when {
-            isRegistered -> "Cancelar inscrição"
-            isFull -> "Evento lotado"
+            registration?.checkedInAt != null -> "Presença confirmada"
+            registration != null -> if (isRegistered) "Cancelar inscrição" else "Sair da lista de espera"
+            closed -> "Evento encerrado"
+            full || event.waitingUserIds.isNotEmpty() -> "Entrar na lista de espera"
             else -> "Inscrever-se"
         }
-    }
-
-    private fun showRegistrationLoading(isRegistered: Boolean) {
-        binding.buttonRegistration.visibility = View.VISIBLE
-        binding.buttonRegistration.isEnabled = false
-        binding.buttonRegistration.text = if (isRegistered) {
-            "Cancelando inscrição..."
-        } else {
-            "Realizando inscrição..."
+        binding.textEnrollmentStatus.text = when (status) {
+            RegistrationStatus.CONFIRMED -> "Sua inscrição está confirmada."
+            RegistrationStatus.WAITLISTED -> "Você está na lista de espera. Consulte esta tela para acompanhar sua vaga."
+            RegistrationStatus.INVITED -> if (closed) "O evento encerrou." else
+                "Uma vaga foi reservada para você. Confirme abaixo ou saia da fila."
+            null -> ""
         }
+        binding.buttonConfirmInvitation.visibility =
+            if (status == RegistrationStatus.INVITED && !closed) View.VISIBLE else View.GONE
+        binding.buttonShowTicket.visibility =
+            if (isRegistered && !registration?.qrToken.isNullOrBlank()) View.VISIBLE else View.GONE
     }
 
     private fun renderFavoriteButton(isFavorite: Boolean) {
