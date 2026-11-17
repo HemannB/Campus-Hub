@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="#F7F9FC">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:padding="24dp" android:orientation="vertical">
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonBack"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="Voltar"
+            android:textAllCaps="false" />
+        <ProgressBar android:id="@+id/progress" android:layout_width="36dp"
+            android:layout_height="36dp" android:layout_gravity="center_horizontal" />
+        <TextView android:id="@+id/textError" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:textColor="#B3261E" android:textSize="16sp" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonRetry"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="Tentar novamente"
+            android:textAllCaps="false" />
+        <LinearLayout android:id="@+id/content" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:orientation="vertical">
+            <TextView android:id="@+id/textTitle" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:textColor="#071A45"
+                android:textSize="26sp" android:textStyle="bold" android:layout_marginTop="16dp" />
+            <TextView android:id="@+id/textSummary" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:textColor="#667085"
+                android:textSize="16sp" android:layout_marginVertical="16dp" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonEdit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="Editar evento"
+            android:textAllCaps="false" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonPublish"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="Publicar evento"
+            android:textAllCaps="false" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonEnd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="Encerrar evento"
+            android:textAllCaps="false" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonScan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="Escanear QR Code"
+            android:textAllCaps="false" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Inscritos e lista de espera" android:textSize="22sp"
+                android:textColor="#071A45" android:layout_marginTop="24dp" />
+            <TextView android:id="@+id/textEmpty" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:text="Nenhuma inscrição neste evento."
+                android:textColor="#667085" android:layout_marginTop="16dp" />
+            <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerAttendees"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false" android:layout_marginTop="16dp" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
