@@ -30,6 +30,16 @@
         </provider>
 
         <activity
+            android:name=".organizer.OrganizerEventActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CampusHUB.Home" />
+
+        <activity
+            android:name=".organizer.EventFormActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CampusHUB.Home" />
+
+        <activity
             android:name=".organizer.OrganizerHomeActivity"
             android:exported="false"
             android:theme="@style/Theme.CampusHUB.Home" />

@@ -17,6 +17,14 @@
         android:orientation="vertical"
         android:padding="20dp">
 
+        <ImageView
+            android:id="@+id/imageEvent"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:layout_marginBottom="12dp"
+            android:contentDescription="Imagem do evento"
+            android:scaleType="centerCrop" />
+
         <TextView
             android:id="@+id/textEventStatus"
             android:layout_width="wrap_content"
@@ -48,6 +56,14 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:textColor="#667085"
+            android:textSize="15sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Gerenciar evento →"
+            android:textColor="#1557D6"
             android:textSize="15sp" />
 
     </LinearLayout>

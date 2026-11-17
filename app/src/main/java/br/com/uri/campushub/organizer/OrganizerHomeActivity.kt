@@ -17,7 +17,9 @@ class OrganizerHomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityOrganizerHomeBinding
     private lateinit var authViewModel: AuthViewModel
     private lateinit var eventsViewModel: OrganizerEventsViewModel
-    private val eventAdapter = OrganizerEventAdapter()
+    private val eventAdapter = OrganizerEventAdapter { event ->
+        startActivity(Intent(this, OrganizerEventActivity::class.java).putExtra("event_id", event.id))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +31,9 @@ class OrganizerHomeActivity : AppCompatActivity() {
         binding.recyclerOrganizerEvents.layoutManager = LinearLayoutManager(this)
         binding.recyclerOrganizerEvents.adapter = eventAdapter
         binding.buttonRefreshEvents.setOnClickListener { eventsViewModel.loadEvents() }
+        binding.buttonCreateEvent.setOnClickListener {
+            startActivity(Intent(this, EventFormActivity::class.java))
+        }
         observeEvents()
 
         binding.buttonLogout.setOnClickListener {
