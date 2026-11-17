@@ -1,9 +1,180 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2026, 11, 6);
+    function signed() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function role() { return get(/databases/$(database)/documents/users/$(uid())).data.get('role', 'STUDENT'); }
+    function organizer() { return signed() && role() == 'ORGANIZER'; }
+    function eventPath(id) { return /databases/$(database)/documents/events/$(id); }
+    function regPath(user, event) { return /databases/$(database)/documents/registrations/$(user + '_' + event); }
+    function waiting(event) { return event.get('waitingUserIds', []); }
+    function invited(event) { return event.get('invitedUserIds', []); }
+    function count(event) { return event.get('participantCount', 0); }
+    function available(event) {
+      return event.get('maxParticipants', 0) <= 0 ||
+        count(event) + invited(event).size() < event.maxParticipants;
+    }
+    function open(event) {
+      return event.get('status', 'PUBLISHED') == 'PUBLISHED' && event.endAt > request.time;
+    }
+    function owns(event) { return organizer() && event.get('organizerId', '') == uid(); }
+    function validEvent(event) {
+      return event.title is string && event.title.size() > 0 &&
+        event.description is string && event.description.size() > 0 &&
+        event.category is string && event.category.size() > 0 &&
+        event.location is string && event.location.size() > 0 &&
+        event.startAt is timestamp && event.endAt is timestamp && event.endAt > event.startAt &&
+        event.maxParticipants is int && event.maxParticipants > 0 && event.imageUrl is string;
+    }
+    function cancellation(before, after, eventId) {
+      let ownPath = regPath(uid(), eventId);
+      let own = get(ownPath).data;
+      let remaining = waiting(before).removeAll([uid()]);
+      let reservations = invited(before).removeAll([uid()]);
+      let total = own.get('status', 'CONFIRMED') == 'CONFIRMED' && count(before) > 0
+        ? count(before) - 1 : count(before);
+      let canInvite = remaining.size() > 0 &&
+        (before.get('maxParticipants', 0) <= 0 || total + reservations.size() < before.maxParticipants);
+      let next = canInvite ? remaining[0] : '';
+      return exists(ownPath) && !existsAfter(ownPath) && own.get('checkedInAt', null) == null &&
+        count(after) == total &&
+        waiting(after) == (canInvite ? remaining.removeAll([next]) : remaining) &&
+        invited(after) == (canInvite ? reservations.concat([next]) : reservations) &&
+        (!canInvite || (get(regPath(next, eventId)).data.status == 'WAITLISTED' &&
+          getAfter(regPath(next, eventId)).data.status == 'INVITED'));
+    }
+    function vacancyPromotion(before, after, eventId) {
+      let queue = waiting(before);
+      let next = queue.size() > 0 ? queue[0] : '';
+      return signed() && (role() == 'STUDENT' || owns(before)) && open(before) &&
+        available(before) && queue.size() > 0 && count(after) == count(before) &&
+        waiting(after) == queue.removeAll([next]) && invited(after) == invited(before).concat([next]) &&
+        get(regPath(next, eventId)).data.status == 'WAITLISTED' &&
+        getAfter(regPath(next, eventId)).data.status == 'INVITED';
+    }
+    function enrollmentChange(before, after, eventId) {
+      let path = regPath(uid(), eventId);
+      let old = exists(path) ? get(path).data : null;
+      let new = existsAfter(path) ? getAfter(path).data : null;
+      let immediate = available(before) && waiting(before).size() == 0;
+      return signed() && role() == 'STUDENT' && (
+        (old == null && new != null && open(before) &&
+          (immediate ?
+            new.status == 'CONFIRMED' && count(after) == count(before) + 1 &&
+              waiting(after) == waiting(before) && invited(after) == invited(before) :
+            new.status == 'WAITLISTED' && count(after) == count(before) &&
+              waiting(after) == waiting(before).concat([uid()]) && invited(after) == invited(before))) ||
+        (old != null && new != null && old.get('status', 'CONFIRMED') == 'INVITED' &&
+          new.status == 'CONFIRMED' && uid() in invited(before) && open(before) &&
+          count(after) == count(before) + 1 && waiting(after) == waiting(before) &&
+          invited(after) == invited(before).removeAll([uid()])) ||
+        (old != null && new == null && cancellation(before, after, eventId))
+      );
+    }
+    match /users/{userId} {
+      allow read: if signed() && (uid() == userId || organizer());
+      allow create: if signed() && uid() == userId &&
+        request.resource.data.id == userId && request.resource.data.role == 'STUDENT';
+      allow update: if signed() && uid() == userId &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['name', 'studentId', 'course', 'semester', 'photoUrl']);
+    }
+    match /events/{eventId} {
+      allow read: if signed();
+      allow create: if organizer() && request.resource.data.organizerId == uid() &&
+        request.resource.data.status == 'DRAFT' && count(request.resource.data) == 0 &&
+        waiting(request.resource.data).size() == 0 && invited(request.resource.data).size() == 0 &&
+        validEvent(request.resource.data);
+      allow update: if (
+        owns(resource.data) && validEvent(request.resource.data) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'title', 'description', 'category', 'location', 'imageUrl', 'startAt', 'endAt', 'maxParticipants', 'status'
+        ]) && request.resource.data.maxParticipants >= count(resource.data) + invited(resource.data).size() &&
+        resource.data.get('status', 'PUBLISHED') != 'ENDED' &&
+        ((request.resource.data.status == resource.data.get('status', 'PUBLISHED')) ||
+          (resource.data.get('status', 'PUBLISHED') == 'DRAFT' && request.resource.data.status == 'PUBLISHED' &&
+            request.resource.data.endAt > request.time) ||
+          (resource.data.get('status', 'PUBLISHED') == 'PUBLISHED' && request.resource.data.status == 'ENDED' &&
+            resource.data.startAt <= request.time && request.resource.data.endAt == request.time))
+      ) || (
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['participantCount', 'waitingUserIds', 'invitedUserIds']) &&
+        (enrollmentChange(resource.data, request.resource.data, eventId) ||
+          vacancyPromotion(resource.data, request.resource.data, eventId))
+      );
+    }
+    match /registrations/{registrationId} {
+      function eventBefore() { return get(eventPath(resource.data.eventId)).data; }
+      function own() { return signed() && resource.data.userId == uid(); }
+      allow get: if signed() && (resource == null || own() || owns(eventBefore()));
+      allow list: if signed() && (own() || owns(eventBefore()));
+      allow create: if signed() && request.resource.data.userId == uid() &&
+        registrationId == uid() + '_' + request.resource.data.eventId &&
+        request.resource.data.registeredAt == request.time &&
+        request.resource.data.get('checkedInAt', null) == null &&
+        request.resource.data.keys().hasOnly(['userId', 'userName', 'eventId', 'status', 'registeredAt', 'qrToken']) &&
+        request.resource.data.userName == get(/databases/$(database)/documents/users/$(uid())).data.name &&
+        (request.resource.data.status == 'WAITLISTED' ||
+          (request.resource.data.status == 'CONFIRMED' && request.resource.data.qrToken is string &&
+            request.resource.data.qrToken.size() > 0)) &&
+        enrollmentChange(get(eventPath(request.resource.data.eventId)).data,
+          getAfter(eventPath(request.resource.data.eventId)).data, request.resource.data.eventId);
+      allow delete: if own() && cancellation(eventBefore(),
+        getAfter(eventPath(resource.data.eventId)).data, resource.data.eventId);
+      allow update: if (
+        own() && resource.data.get('status', 'CONFIRMED') == 'CONFIRMED' &&
+        resource.data.get('qrToken', '') == '' && request.resource.data.qrToken is string &&
+        request.resource.data.qrToken.size() > 0 &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['qrToken'])
+      ) || (
+        own() && resource.data.status == 'INVITED' && request.resource.data.status == 'CONFIRMED' &&
+        request.resource.data.qrToken is string && request.resource.data.qrToken.size() > 0 &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'qrToken']) &&
+        enrollmentChange(eventBefore(), getAfter(eventPath(resource.data.eventId)).data, resource.data.eventId)
+      ) || (
+        signed() && role() == 'STUDENT' && resource.data.status == 'WAITLISTED' &&
+        request.resource.data.status == 'INVITED' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
+        resource.data.userId in invited(getAfter(eventPath(resource.data.eventId)).data) &&
+        (cancellation(eventBefore(), getAfter(eventPath(resource.data.eventId)).data, resource.data.eventId) ||
+          vacancyPromotion(eventBefore(), getAfter(eventPath(resource.data.eventId)).data, resource.data.eventId))
+      ) || (
+        owns(eventBefore()) && resource.data.get('status', 'CONFIRMED') == 'CONFIRMED' &&
+        resource.data.get('checkedInAt', null) == null && request.resource.data.checkedInAt == request.time &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['checkedInAt']) &&
+        open(eventBefore())
+      );
+    }
+    match /favorites/{favoriteId} {
+      allow read: if signed() && (resource == null || resource.data.userId == uid());
+      allow create: if signed() && request.resource.data.userId == uid() &&
+        favoriteId == uid() + '_' + request.resource.data.eventId;
+      allow delete: if signed() && resource.data.userId == uid();
+    }
+    match /comments/{commentId} {
+      allow read: if signed();
+      allow create: if signed() && request.resource.data.userId == uid() &&
+        request.resource.data.createdAt == request.time && request.resource.data.text.size() > 0;
+      allow update: if signed() && resource.data.userId == uid() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'updatedAt']) &&
+        request.resource.data.text.size() > 0;
+      allow delete: if signed() && resource.data.userId == uid();
+    }
+    match /ratings/{ratingId} {
+      function eligible() {
+        let event = get(eventPath(request.resource.data.eventId)).data;
+        let registration = get(regPath(uid(), request.resource.data.eventId)).data;
+        return registration.get('status', 'CONFIRMED') == 'CONFIRMED' && event.endAt <= request.time;
+      }
+      allow read: if signed();
+      allow create: if signed() && request.resource.data.userId == uid() &&
+        ratingId == uid() + '_' + request.resource.data.eventId &&
+        request.resource.data.score is int && request.resource.data.score >= 1 && request.resource.data.score <= 5 &&
+        eligible();
+      allow update: if signed() && resource.data.userId == uid() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['score', 'updatedAt']) &&
+        request.resource.data.score is int && request.resource.data.score >= 1 && request.resource.data.score <= 5 &&
+        eligible();
     }
   }
 }
