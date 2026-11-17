@@ -6,7 +6,7 @@ gerenciar inscrições e favoritos e compartilhar experiências por meio de
 comentários, avaliações e publicações multimídia.
 
 O projeto foi desenvolvido como atividade acadêmica da disciplina de
-Desenvolvimento Mobile e contempla as três etapas propostas.
+Desenvolvimento Mobile e evolui conforme as etapas propostas na disciplina.
 
 ## Funcionalidades
 
@@ -48,6 +48,27 @@ e não são sincronizados entre dispositivos.
 
 ## Regras funcionais importantes
 
+### Organização, vagas e check-in
+
+- contas comuns são cadastradas como `STUDENT`; a atribuição de `ORGANIZER`
+  é feita manualmente no documento do usuário pelo responsável pelo Firebase;
+- organizadores possuem um painel com os próprios eventos e a lista de alunos;
+- eventos podem ser criados como rascunho, editados, publicados e encerrados;
+- o formulário permite informar uma URL de imagem; sem ela, usa-se a arte padrão;
+- alunos entram na lista de espera quando as vagas estão ocupadas ou reservadas;
+- cancelamentos reservam a vaga para o primeiro aluno da fila, que precisa confirmá-la;
+- após aumento da capacidade, a consulta da inscrição oferece a próxima vaga disponível;
+- a situação da fila e as ofertas de vaga são consultadas nos detalhes do evento;
+- **Meus Eventos** inclui inscrições confirmadas, espera e vagas oferecidas;
+- cada inscrição confirmada tem um QR Code; o organizador escaneia para registrar presença;
+- a presença é registrada uma única vez e impede o cancelamento dessa inscrição.
+
+Os contadores e as filas são atualizados junto com as inscrições em transações do
+Firestore. Uma vaga reservada não pode ser ocupada por outro aluno. A fila usa
+UIDs em ordem de chegada e não depende de notificações ou de um servidor próprio.
+
+### Demais recursos
+
 - favoritar um evento não realiza uma inscrição;
 - somente usuários autenticados podem publicar comentários e mídias;
 - somente o autor pode editar ou excluir o próprio comentário;
@@ -86,7 +107,9 @@ app/src/main/java/br/com/uri/campushub/
 ├── auth/        # telas de autenticação e recuperação de senha
 ├── model/       # modelos e regras de domínio
 ├── repository/  # acesso ao Firebase e ao armazenamento local
+├── organizer/   # gerenciamento dos eventos, inscritos e check-in
 ├── student/     # telas e adaptadores da área do aluno
+├── ui/          # carregamento compartilhado das imagens
 └── viewmodel/   # estado e regras de apresentação
 ```
 
@@ -123,9 +146,13 @@ nas preferências locais do aplicativo.
 3. Confirme que `app/google-services.json` corresponde ao projeto Firebase que
    será utilizado.
 
-4. Abra o projeto no Android Studio e aguarde a sincronização do Gradle.
+4. No console Firebase, copie o conteúdo de `firestore.rules` para as regras do
+   Firestore e publique. Essas regras controlam autoria, papéis, vagas e presença.
+   O aplicativo não permite que um aluno altere o próprio papel para organizador.
 
-5. Selecione um dispositivo e execute o módulo `app`.
+5. Abra o projeto no Android Studio e aguarde a sincronização do Gradle.
+
+6. Selecione um dispositivo e execute o módulo `app`.
 
 Sem uma chave válida do Google Maps, as demais funcionalidades continuam
 disponíveis, mas o mapa do evento não será carregado corretamente.
@@ -143,6 +170,33 @@ Para executar o Android Lint:
 ```bash
 ./gradlew lintDebug
 ```
+
+Com Node.js, Java e um dispositivo Android conectado, execute as integrações:
+
+```bash
+./scripts/run-integration-tests.sh
+```
+
+O script usa Auth e Firestore locais e encaminha as portas via ADB, tanto para
+emulador Android quanto para aparelho físico. Os testes verificam também criação,
+edição e publicação, fila de espera, confirmação de vaga e check-in único.
+
+Para testar as regras reais, sem precisar de aparelho Android:
+
+```bash
+./scripts/run-rules-tests.sh
+```
+
+Para executar os dois fluxos de integração da organização com as regras reais
+também ativas no emulador e um aparelho conectado:
+
+```bash
+./scripts/run-integration-tests.sh --organizer-rules
+```
+
+`firebase.json` aponta para as regras reais. `firebase.integration.json` usa regras
+permissivas exclusivamente nos emuladores, para isolar os testes dos repositórios.
+Os testes de regras usam `firebase.rules-tests.json` e verificam também acessos negados.
 
 Os testes de avaliação cobrem eventos ainda em andamento, eventos encerrados,
 o instante exato do término e eventos com datas ausentes ou inconsistentes.
