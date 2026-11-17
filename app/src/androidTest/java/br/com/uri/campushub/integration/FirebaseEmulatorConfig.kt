@@ -12,12 +12,14 @@ object FirebaseEmulatorConfig {
     private const val FIREBASE_APP_NAME = "campushub-integration"
     private var authConfigured = false
     private var firestoreConfigured = false
+    private val host: String
+        get() = InstrumentationRegistry.getArguments().getString("firebaseHost") ?: "10.0.2.2"
 
     @Synchronized
     fun auth(): FirebaseAuth {
         val auth = FirebaseAuth.getInstance(firebaseApp())
         if (!authConfigured) {
-            auth.useEmulator("10.0.2.2", 9099)
+            auth.useEmulator(host, 9099)
             authConfigured = true
         }
         return auth
@@ -27,7 +29,7 @@ object FirebaseEmulatorConfig {
     fun firestore(): FirebaseFirestore {
         val firestore = FirebaseFirestore.getInstance(firebaseApp())
         if (!firestoreConfigured) {
-            firestore.useEmulator("10.0.2.2", 8080)
+            firestore.useEmulator(host, 8080)
             firestore.firestoreSettings = FirebaseFirestoreSettings.Builder()
                 .setLocalCacheSettings(MemoryCacheSettings.newBuilder().build())
                 .build()
